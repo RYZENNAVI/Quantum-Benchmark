@@ -1,0 +1,9 @@
+{
+  "circuit": [
+    { "id": "g1", "type": "RZ", "target": [1], "params": [3.14], "timeStep": 0 },
+    { "id": "g2", "type": "CZ", "target": [1], "control": [0], "timeStep": 1 },
+    { "id": "g3", "type": "MEASURE", "target": [1], "timeStep": 2 }
+  ],
+  "parameters": [],
+  "inputs": []
+}

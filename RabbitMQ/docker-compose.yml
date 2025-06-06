@@ -1,0 +1,22 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4-management # RabbitMQ mit Web-Management-Plugin
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"  # Standard RabbitMQ Port für Verbindungen
+      - "15672:15672"  # RabbitMQ Web-Management UI
+    environment:
+      - RABBITMQ_DEFAULT_USER=erik
+      - RABBITMQ_DEFAULT_PASS=erik
+    volumes:
+      - rabbitmq_data:/data/rabbitmq
+    networks:
+      - rabbitmq_network
+
+networks:
+  rabbitmq_network:
+    driver: bridge
+
+volumes:
+  rabbitmq_data:
+    driver: local

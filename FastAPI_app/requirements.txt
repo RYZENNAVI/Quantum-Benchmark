@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+pymongo
+pika
+pydantic
+python-dotenv      

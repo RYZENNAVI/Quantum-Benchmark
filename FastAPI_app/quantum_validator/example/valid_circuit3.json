@@ -1,0 +1,9 @@
+{
+  "circuit": [
+    { "id": "g1", "type": "RX", "target": [0], "params": ["theta_1"], "timeStep": 0 },
+    { "id": "g2", "type": "RY", "target": [1], "params": ["theta_2"], "timeStep": 1 },
+    { "id": "g3", "type": "MEASURE", "target": [0, 1], "timeStep": 2 }
+  ],
+  "parameters": ["theta_1", "theta_2"],
+  "inputs": ["x_1", "x_2"]
+}

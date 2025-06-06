@@ -1,0 +1,9 @@
+{
+  "circuit": [
+    { "id": "g1", "type": "RY", "target": [0], "params": ["theta_1"], "timeStep": 0 },
+    { "id": "g2", "type": "CNOT", "target": [0, 1], "timeStep": 1 },
+    { "id": "g3", "type": "MEASURE", "target": [1], "timeStep": 2 }
+  ],
+  "parameters": ["theta_1"],
+  "inputs": ["input_1"]
+}
