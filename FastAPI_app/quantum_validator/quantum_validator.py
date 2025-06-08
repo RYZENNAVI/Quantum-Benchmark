@@ -38,8 +38,10 @@ class QuantumCircuitValidator:
         all_qubit_indices = self._collect_all_qubit_indices()
         self._validate_gates(all_qubit_indices)
 
-        if not self.validation_errors:
-            self._validate_time_conflicts()
+        # Time conflicts are only checked when gates contain explicit
+        # timeStep information.  The current format defines the order of
+        # operations implicitly by their position in the list, so no
+        # additional time conflict validation is required.
 
         return len(self.validation_errors) == 0
 
@@ -69,7 +71,6 @@ class QuantumCircuitValidator:
     def _validate_gates(self, all_qubit_indices: List[int]) -> None:
         circuit = self.circuit_data.get('circuit', [])
         parameters = self.circuit_data.get('parameters', [])
-        gate_ids = set()
         last_index = len(circuit) - 1
 
         for idx, gate in enumerate(circuit):
@@ -77,17 +78,11 @@ class QuantumCircuitValidator:
                 self.validation_errors.append(f"Gate #{idx+1} must be a dict")
                 continue
 
-            for field in ['id', 'type', 'target', 'timeStep']:
+            for field in ['type', 'target']:
                 if field not in gate:
                     self.validation_errors.append(f"Gate #{idx+1} missing '{field}'")
-            if any(field not in gate for field in ['id', 'type', 'target', 'timeStep']):
+            if any(field not in gate for field in ['type', 'target']):
                 continue
-
-            gate_id = gate['id']
-            if not isinstance(gate_id, str) or gate_id in gate_ids:
-                self.validation_errors.append(f"Gate #{idx+1}: invalid or duplicate 'id'")
-            else:
-                gate_ids.add(gate_id)
 
             gate_type = gate['type']
             if gate_type not in self.SUPPORTED_GATE_TYPES:
@@ -106,10 +101,6 @@ class QuantumCircuitValidator:
                         self.validation_errors.append(f"Gate #{idx+1}: control and target overlap: {overlap}")
 
             self._validate_params(gate, idx, parameters)
-
-            ts = gate['timeStep']
-            if not isinstance(ts, int) or ts < 0:
-                self.validation_errors.append(f"Gate #{idx+1}: invalid 'timeStep'")
 
     def _validate_target(self, gate: Dict, idx: int) -> None:
         target = gate.get('target')
@@ -153,22 +144,12 @@ class QuantumCircuitValidator:
             self.validation_errors.append(f"Gate #{idx+1}: 'params' not allowed for {gate_type}")
 
     def _validate_time_conflicts(self) -> None:
-        circuit = self.circuit_data.get('circuit', [])
-        time_qubit_map: Dict[int, set] = {}
-        for idx, gate in enumerate(circuit):
-            ts = gate.get('timeStep')
-            if not isinstance(ts, int):
-                continue
-            active = set(gate.get('target', []))
-            ctrl = gate.get('control')
-            if isinstance(ctrl, list):
-                active.update(ctrl)
-            if ts not in time_qubit_map:
-                time_qubit_map[ts] = set()
-            conflicts = active & time_qubit_map[ts]
-            if conflicts:
-                self.validation_errors.append(f"Gate #{idx+1}: time conflict at step {ts} on qubits {sorted(list(conflicts))}")
-            time_qubit_map[ts].update(active)
+        """Deprecated: retained for backward compatibility."""
+        # The new circuit format does not include explicit time steps.
+        # Gates are assumed to execute sequentially according to their
+        # position in the list, so there is no additional time conflict
+        # validation required.
+        return
 
 def validate_quantum_circuit_from_file(file_path: str) -> Dict[str, Union[bool, List[str]]]:
     validator = QuantumCircuitValidator()

@@ -1,6 +1,6 @@
 # Quantum Circuit JSON Validation Rules
 
-**Version**: 2.0  
+**Version**: 3.0
 **Filename**: `quantum_circuit_validation_rules.md`
 
 ---
@@ -28,26 +28,21 @@ The JSON input must be an object with the following fields:
 
 ## 2. Gate Entry Requirements
 
-Each item in the `circuit` list must be a dictionary representing a quantum gate and must include the following fields:
-
-- **`id`**
-  - Required.
-  - A unique string identifier for the gate.
+Each item in the `circuit` list must be a dictionary describing a quantum gate
+and must include the following fields:
 
 - **`type`**
   - Required.
   - A string specifying the gate type.
-  - Must be one of the following:
+  - Must be one of:
     - `H`, `X`, `Y`, `Z`, `RX`, `RY`, `RZ`, `CNOT`, `CZ`, `SWAP`, `MEASURE`
 
 - **`target`**
   - Required.
   - A non-empty list of integers.
-  - Each integer represents a qubit index (must be non-negative).
+  - Each integer represents a non-negative qubit index.
 
-- **`timeStep`**
-  - Required.
-  - A non-negative integer indicating when the gate is applied.
+The order of gates in the list implicitly defines their execution order.
 
 ---
 
@@ -87,21 +82,14 @@ Each item in the `circuit` list must be a dictionary representing a quantum gate
 
 ---
 
-## 6. Time Conflict Check
-
-- No two gates may operate on the same qubit at the same `timeStep`.
-- Both `target` and `control` qubits are included in the conflict check.
-
----
-
-## 7. Error Handling
+## 6. Error Handling
 
 Validation will fail and descriptive error messages will be returned if:
 
 - The input is not a valid JSON file.
 - Required fields are missing or have incorrect types.
 - Invalid gate types or parameters are used.
-- TimeStep conflicts or illegal control/target configurations are found.
+- Illegal control/target configurations are found.
 
 ---
 
