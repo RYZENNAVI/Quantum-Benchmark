@@ -13,62 +13,85 @@ def load_example(name):
         return json.load(f)
 
 
-def test_post_encoding(data):
+def pretty_print(title, status, result):
+    print(f"\n🧪 {title}")
+    print(f"Status: {status}")
+    if isinstance(result, dict):
+        print("Response:")
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+    else:
+        print(f"Response: {result}")
+
+
+def test_post_encoding(data, name):
     resp = requests.post(f"{BASE_URL}/encoding", json=data)
     try:
         result = resp.json()
     except Exception:
         result = resp.text
-    print(f"POST /encoding -> status {resp.status_code}: {result}")
+    pretty_print(f"POST /encoding [{name}]", resp.status_code, result)
     return result, resp
 
 
 def test_send_to_worker(encoding_id):
     resp = requests.post(f"{BASE_URL}/encode", params={"encoding_id": encoding_id})
-    print(f"POST /encode?encoding_id={encoding_id} -> status {resp.status_code}: {resp.text}")
+    pretty_print(f"POST /encode?encoding_id={encoding_id}", resp.status_code, resp.text)
 
 
 def list_encodings():
     resp = requests.get(f"{BASE_URL}/encoding")
-    print(f"GET /encoding -> status {resp.status_code}")
     try:
         data = resp.json()
     except Exception:
         data = resp.text
-    print(data)
+    pretty_print("GET /encoding", resp.status_code, data)
     return data
 
 
 def run_tests():
-    print("Testing valid circuits...")
+    print("========== Running API Tests ==========")
+
+    print("\n🟢 Testing valid circuits...")
     for name in ["valid_circuit1.json", "valid_circuit2.json", "valid_circuit3.json"]:
         data = load_example(name)
-        test_post_encoding(data)
+        test_post_encoding(data, name)
 
-    print("Testing invalid circuit...")
+    print("\n🔴 Testing invalid circuit...")
     invalid = load_example("invalid_circuit.json")
-    test_post_encoding(invalid)
+    test_post_encoding(invalid, "invalid_circuit.json")
 
-    print("Listing encodings...")
+    print("\n📋 Listing encodings...")
     encodings = list_encodings()
 
     if isinstance(encodings, list) and encodings:
         obj_id = encodings[0].get("_id")
         if obj_id:
-            print(f"Testing get/update/delete for {obj_id}...")
+            print(f"\n🔁 Testing get/update/delete for encoding ID: {obj_id}...")
+
+            # GET
             resp = requests.get(f"{BASE_URL}/encoding/{obj_id}")
-            print(f"GET /encoding/{{id}} -> status {resp.status_code}: {resp.text}")
+            pretty_print(f"GET /encoding/{obj_id}", resp.status_code, resp.text)
 
-            # Send update with same data
+            # PUT (send same data again)
             resp = requests.put(f"{BASE_URL}/encoding/{obj_id}", json=encodings[0]["circuit"])
-            print(f"PUT /encoding/{{id}} -> status {resp.status_code}: {resp.text}")
+            pretty_print(f"PUT /encoding/{obj_id}", resp.status_code, resp.text)
 
+            # DELETE
             resp = requests.delete(f"{BASE_URL}/encoding/{obj_id}")
-            print(f"DELETE /encoding/{{id}} -> status {resp.status_code}: {resp.text}")
+            pretty_print(f"DELETE /encoding/{obj_id}", resp.status_code, resp.text)
 
-    print("Testing send to worker...")
+    print("\n📤 Testing send to worker...")
     test_send_to_worker(1)
     test_send_to_worker("invalid")
+
+    print("\n🧹 Cleaning up: deleting all encodings...")
+    for item in encodings:
+        obj_id = item.get("_id")
+        if obj_id:
+            resp = requests.delete(f"{BASE_URL}/encoding/{obj_id}")
+            print(f"  - Deleted {obj_id} -> status {resp.status_code}")
+
+    print("\n✅ All tests completed.\n")
 
 
 if __name__ == "__main__":
