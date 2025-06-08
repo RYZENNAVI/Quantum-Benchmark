@@ -4,12 +4,20 @@ import time
 
 # Global
 TASK_QUEUE = 'task_queue'
-USER = 'erik'
-PASSWORD = 'erik'
-HOST = 'localhost'
+USER = os.getenv("RABBITMQ_USER", "erik")
+PASSWORD = os.getenv("RABBITMQ_PASS", "erik")
+HOST = os.getenv("RABBITMQ_HOST", "localhost")
+PORT = int(os.getenv("RABBITMQ_PORT", "5672"))
 
 credentials = pika.PlainCredentials(USER, PASSWORD)
-connection = pika.BlockingConnection(pika.ConnectionParameters(HOST, credentials=credentials))
+params = pika.ConnectionParameters(
+    host=HOST,
+    port=PORT,
+    credentials=credentials,
+    connection_attempts=5,
+    retry_delay=5,
+)
+connection = pika.BlockingConnection(params)
 channel = connection.channel()
 channel.queue_declare(queue=TASK_QUEUE, durable=True)
 
