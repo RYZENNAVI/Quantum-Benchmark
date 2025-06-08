@@ -2,10 +2,8 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Union
 
 class Gate(BaseModel):
-    id: str
     type: str
     target: List[int]
-    timeStep: int
     params: Optional[List[Union[float, str]]] = None
     control: Optional[List[int]] = None
 
