@@ -1,45 +1,58 @@
-version: "3.8"
+version: '3.8'
 
 services:
+  mongodb:
+    image: mongo:8.0
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      # 把项目下的 init-mongo.js 挂载到容器的 /docker-entrypoint-initdb.d/ 目录，以便容器启动时自动初始化数据库
+      - ./MongoDB/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+      # 数据持久化
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: Quantum-Encoding-DB
+
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"    # RabbitMQ 客户端连接端口
+      - "15672:15672"  # RabbitMQ Web 管理界面
+    environment:
+      RABBITMQ_DEFAULT_USER: erik
+      RABBITMQ_DEFAULT_PASS: erik
+    volumes:
+      - rabbitmq_data:/data/rabbitmq
+
   fastapi:
-    build:
-      context: ./FastAPI_app
+    image: python:3.11-slim
     container_name: fastapi
+    working_dir: /app/FastAPI_app
+    # 把本地的 FastAPI_app 目录映射到容器里，容器会直接读取这里的代码
+    volumes:
+      - ./FastAPI_app:/app/FastAPI_app
     ports:
       - "8000:8000"
     environment:
-      MONGO_URI: "mongodb://mongo:27017/"
+      # 配置 Python 路径，使得代码能正确 import
+      PYTHONPATH: /app
+      # 连接 MongoDB 时使用服务名 mongodb
+      MONGO_URI: "mongodb://mongodb:27017/"
+      # 连接 RabbitMQ 时使用服务名 rabbitmq
       RABBITMQ_HOST: "rabbitmq"
       RABBITMQ_USER: "erik"
       RABBITMQ_PASS: "erik"
     depends_on:
-      rabbitmq:
-        condition: service_healthy
-      mongo:
-        condition: service_healthy
+      - mongodb
+      - rabbitmq
+    command: >
+      sh -c "pip install --no-cache-dir -r requirements.txt &&
+             uvicorn FastAPI_app.main:app --host 0.0.0.0 --port 8000"
 
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: rabbitmq
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      RABBITMQ_DEFAULT_USER: erik
-      RABBITMQ_DEFAULT_PASS: erik
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  mongo:
-    image: mongo:8.0
-    container_name: mongo
-    ports:
-      - "27017:27017"
-    healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
-      interval: 5s
-      timeout: 5s
-      retries: 5
+volumes:
+  mongo_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
