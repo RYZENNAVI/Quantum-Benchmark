@@ -3,24 +3,14 @@
 @echo off
 setlocal
 
-echo [1/5] Start MongoDB Container...
-cd MongoDB
+echo [1/3] Start all Container...
 docker-compose up -d
-cd ..
 
-echo [2/5] Start RabbitMQ Container...
-cd RabbitMQ
-docker-compose up -d
-cd ..
-
-echo [3/5] Change venv...
+echo [2/3] Change venv...
 :: Change this path to your venv
 call "C:/Users/erikp/PycharmProjects/blockchain/.venv/Scripts/activate.bat"
 
-echo [4/5] Start FastAPI-Application...
-start python -m uvicorn fastapi_app.main:app --reload
-
-echo [5/5] Start worker...
+echo [3/3] Start worker...
 cd Worker
 start python worker.py
 cd ..

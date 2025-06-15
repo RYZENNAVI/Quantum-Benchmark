@@ -1,6 +1,7 @@
 import pika
 import os
 import time
+import db
 
 # Global
 TASK_QUEUE = 'task_queue'
@@ -23,8 +24,16 @@ channel.queue_declare(queue=TASK_QUEUE, durable=True)
 
 def callback(ch, method, properties, body):
     message = body.decode()
+    id = int(message)
     print(f'Get message: {message}')
-    time.sleep(2)
+    db.init_progress(id)
+    for i in range(10):
+        print(f'"Work on step{i+1}')
+        time.sleep(2)
+        db.update_progress(id, (i+1)*10)
+        print(db.get_progress(id))
+
+
     print(f'Finished {message}')
     ch.basic_ack(delivery_tag=method.delivery_tag)
 

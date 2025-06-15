@@ -22,6 +22,27 @@ db.createCollection('ansatz', {
 // No validator added; structure is unrestricted to allow FastAPI to write freely
 db.createCollection('encodingHistory');
 
+db.createCollection('progress', {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["id", "percent"],
+      properties: {
+        id: {
+          bsonType: "int",
+          description: "Id of the user"
+        },
+        percent: {
+          bsonType: "int",
+          description: "Progress in percent"
+        }
+      }
+    }
+  }
+});
+
+db.createCollection('results');
+
 // User collection validator retained
 db.createCollection('user', {
   validator: {
@@ -47,22 +68,22 @@ db.createCollection('user', {
 });
 
 // Insert a FastAPI-style example document for testing
-db.encodingHistory.insertOne({
-  circuit: {
-    qubits: 3,
-    gates: [
-      {
-        id: "g1",
-        type: "RY",
-        target: [0],
-        params: ["theta_1"],
-        timeStep: 0
-      }
-    ]
-  },
-  valid: true,
-  errors: []
-});
+// db.encodingHistory.insertOne({
+//   circuit: {
+//     qubits: 3,
+//     gates: [
+//       {
+//         id: "g1",
+//         type: "RY",
+//         target: [0],
+//         params: ["theta_1"],
+//         timeStep: 0
+//       }
+//     ]
+//   },
+//   valid: true,
+//   errors: []
+// });
 
 // Retain other initialization data
 db.user.insertMany([

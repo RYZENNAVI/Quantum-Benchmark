@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   mongodb:
     image: mongo:8.0
@@ -7,9 +5,7 @@ services:
     ports:
       - "27017:27017"
     volumes:
-      # 把项目下的 init-mongo.js 挂载到容器的 /docker-entrypoint-initdb.d/ 目录，以便容器启动时自动初始化数据库
       - ./MongoDB/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
-      # 数据持久化
       - mongo_data:/data/db
     environment:
       MONGO_INITDB_DATABASE: Quantum-Encoding-DB
@@ -18,8 +14,8 @@ services:
     image: rabbitmq:4-management
     container_name: rabbitmq
     ports:
-      - "5672:5672"    # RabbitMQ 客户端连接端口
-      - "15672:15672"  # RabbitMQ Web 管理界面
+      - "5672:5672"
+      - "15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: erik
       RABBITMQ_DEFAULT_PASS: erik
@@ -30,17 +26,13 @@ services:
     image: python:3.11-slim
     container_name: fastapi
     working_dir: /app/FastAPI_app
-    # 把本地的 FastAPI_app 目录映射到容器里，容器会直接读取这里的代码
     volumes:
       - ./FastAPI_app:/app/FastAPI_app
     ports:
       - "8000:8000"
     environment:
-      # 配置 Python 路径，使得代码能正确 import
       PYTHONPATH: /app
-      # 连接 MongoDB 时使用服务名 mongodb
       MONGO_URI: "mongodb://mongodb:27017/"
-      # 连接 RabbitMQ 时使用服务名 rabbitmq
       RABBITMQ_HOST: "rabbitmq"
       RABBITMQ_PORT: "5672"
       RABBITMQ_USER: "erik"
