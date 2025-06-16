@@ -1,13 +1,13 @@
 from fastapi import FastAPI
-from FastAPI_app.routes import encoding # run...
+from FastAPI_app.routes import encoding, dataset, run, result
 from FastAPI_app.rabbitmq import rabbitmq
 
 app = FastAPI()
 
 app.include_router(encoding.router, prefix="/api", tags=["Encoding"])
-# app.include_router(run.router, prefix="/api", tags=["Run"])
-# app.include_router(result.router, prefix="/api", tags=["Result"])
-# app.include_router(dataset.router, prefix="/api", tags=["Dataset"])
+app.include_router(run.router, prefix="/api", tags=["Run"])
+app.include_router(result.router, prefix="/api", tags=["Result"])
+app.include_router(dataset.router, prefix="/api", tags=["Dataset"])
 
 @app.on_event("startup")
 def startup_event():

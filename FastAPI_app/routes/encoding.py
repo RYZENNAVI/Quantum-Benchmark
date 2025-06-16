@@ -38,6 +38,7 @@ async def validate_circuit(circuit: CircuitData = Body(...)):
             })
         except Exception:
             traceback.print_exc()
+            # TODO: Replace with more specific error message
             raise HTTPException(status_code=500, detail="DB error")
     return result
 
