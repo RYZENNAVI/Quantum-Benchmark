@@ -1,0 +1,25 @@
+{
+  "encodings": {
+    "3": {
+      "depth": 4,
+      "name": "Encoding 3",
+      "description": "Third encoding",
+      "circuit": {"gates": [{"type": "RZ", "target": [1], "params": ["z"]}]}
+    }
+  },
+  "ansaetze": {
+    "3": {
+      "depth": 1,
+      "name": "Ansatz 3",
+      "description": "Third ansatz",
+      "circuit": {"gates": []}
+    }
+  },
+  "data": {
+    "3": {
+      "depth": 1,
+      "name": "Dataset 3",
+      "description": "Third dataset"
+    }
+  }
+}
