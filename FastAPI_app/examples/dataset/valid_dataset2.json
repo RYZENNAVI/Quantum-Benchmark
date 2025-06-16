@@ -1,0 +1,25 @@
+{
+  "encodings": {
+    "2": {
+      "depth": 1,
+      "name": "Encoding 2",
+      "description": "Another encoding",
+      "circuit": {"gates": [{"type": "H", "target": [0]}]}
+    }
+  },
+  "ansaetze": {
+    "2": {
+      "depth": 2,
+      "name": "Ansatz 2",
+      "description": "Second ansatz",
+      "circuit": {"gates": [{"type": "RX", "target": [0], "params": ["x"]}]}
+    }
+  },
+  "data": {
+    "2": {
+      "depth": 1,
+      "name": "Dataset 2",
+      "description": "Second dataset"
+    }
+  }
+}

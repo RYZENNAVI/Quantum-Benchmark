@@ -1,0 +1,25 @@
+{
+  "encodings": {
+    "1": {
+      "depth": 2,
+      "name": "Encoding 1",
+      "description": "Simple encoding example",
+      "circuit": {"gates": []}
+    }
+  },
+  "ansaetze": {
+    "1": {
+      "depth": 3,
+      "name": "Ansatz 1",
+      "description": "Basic ansatz",
+      "circuit": {"gates": []}
+    }
+  },
+  "data": {
+    "1": {
+      "depth": 1,
+      "name": "Dataset 1",
+      "description": "Example dataset"
+    }
+  }
+}
