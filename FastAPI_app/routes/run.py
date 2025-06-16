@@ -9,6 +9,30 @@ from bson.errors import InvalidId
 
 router = APIRouter()
 
+"""Benchmark run API routes.
+
+These endpoints coordinate benchmark executions. Requests are stored in
+MongoDB and tasks are dispatched to the worker via RabbitMQ. The router is
+mounted under ``/api``.
+
+Endpoints
+---------
+``POST   /run``
+    Create a benchmark run request and send it to the worker.
+
+``GET    /run``
+    List all benchmark run requests.
+
+``GET    /run/{object_id}``
+    Retrieve a single benchmark run by id.
+
+``PUT    /run/{object_id}``
+    Update the parameters of an existing run request.
+
+``DELETE /run/{object_id}``
+    Delete a benchmark run entry.
+"""
+
 @router.post("/run", response_model=RunBenchmarkResponse)
 async def start_benchmark(request: RunBenchmarkRequest = Body(...)):
     try:

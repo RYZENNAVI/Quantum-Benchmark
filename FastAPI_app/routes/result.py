@@ -9,6 +9,30 @@ from typing import Dict, List
 
 router = APIRouter()
 
+"""Benchmark result API routes.
+
+Endpoints manage the storage and retrieval of benchmark results produced by
+the worker process. The router is mounted under ``/api`` in the main
+application.
+
+Endpoints
+---------
+``POST   /result``
+    Store a new benchmark result document.
+
+``GET    /result``
+    Retrieve all benchmark results with associated encoding and ansatz info.
+
+``GET    /result/{object_id}``
+    Retrieve a specific benchmark result.
+
+``PUT    /result/{object_id}``
+    Update an existing benchmark result document.
+
+``DELETE /result/{object_id}``
+    Delete a benchmark result document.
+"""
+
 @router.post("/result", response_model=dict)
 async def create_benchmark_result(result: BenchmarkResult = Body(...)):
     try:
