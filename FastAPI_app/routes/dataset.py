@@ -8,6 +8,30 @@ from bson.errors import InvalidId
 
 router = APIRouter()
 
+"""Dataset API routes.
+
+This module exposes CRUD endpoints for managing datasets and reference
+information stored in MongoDB. Each route is prefixed with ``/api`` when the
+router is included in the main application.
+
+Endpoints
+---------
+``POST   /dataset``
+    Create a new :class:`ReferenceData` document.
+
+``GET    /dataset``
+    Retrieve all stored reference data entries.
+
+``GET    /dataset/{object_id}``
+    Retrieve a specific reference data entry by MongoDB object id.
+
+``PUT    /dataset/{object_id}``
+    Replace an existing entry with new data.
+
+``DELETE /dataset/{object_id}``
+    Remove a reference data entry.
+"""
+
 @router.post("/dataset", response_model=dict)
 async def create_reference_data(reference_data: ReferenceData = Body(...)):
     try:

@@ -12,6 +12,29 @@ This software project focuses on addressing that challenge by developing a dedic
 
 ## Installation
 
+### Start backend services
+The project provides a Docker setup for running the FastAPI server,
+MongoDB and RabbitMQ. From the repository root simply execute:
+
+```bash
+docker-compose up
+```
+
+If you need to rebuild the Docker images, use:
+
+```bash
+docker-compose up --build
+```
+
+This will start all three services and expose the FastAPI application on
+`http://localhost:8000`.
+
+### Using the Swagger UI
+FastAPI provides interactive API documentation via Swagger UI. Once the services
+are running, open your browser and navigate to `http://localhost:8000/docs` to
+view and test the available endpoints. An alternative ReDoc interface is
+available at `http://localhost:8000/redoc`.
+
 ## Usage
 Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
 

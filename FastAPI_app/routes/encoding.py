@@ -10,6 +10,32 @@ from bson.errors import InvalidId
 
 router = APIRouter()
 
+"""Encoding API routes.
+
+These endpoints validate and store quantum circuit encodings. The router is
+mounted under ``/api`` in the main application.
+
+Endpoints
+---------
+``POST   /encode``
+    Send an encoding identifier to the worker via RabbitMQ.
+
+``POST   /encoding``
+    Validate a quantum circuit definition and store it if valid.
+
+``GET    /encoding``
+    List all stored encodings.
+
+``GET    /encoding/{object_id}``
+    Retrieve a single encoding entry.
+
+``PUT    /encoding/{object_id}``
+    Update an existing encoding after validation.
+
+``DELETE /encoding/{object_id}``
+    Delete an encoding entry.
+"""
+
 @router.post("/encode")
 def send_encoding_to_worker(encoding_id: int):
     try:
