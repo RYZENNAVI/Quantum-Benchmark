@@ -1,9 +1,0 @@
-{
-  "circuit": [
-    { "type": "RZ", "target": [1], "params": [3.14] },
-    { "type": "CZ", "target": [1], "control": [0] },
-    { "type": "MEASURE", "target": [1] }
-  ],
-  "parameters": [],
-  "inputs": []
-}

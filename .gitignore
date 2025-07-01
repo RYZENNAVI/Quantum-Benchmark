@@ -1,5 +1,16 @@
+<<<<<<< HEAD
+# Ignore Python compiled bytecode
+*.pyc
+__pycache__/ 
+
+# Ignore Vite cache
++.vite/
+=======
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
+# Ignore Vite cache
++.vite/
 
 
+>>>>>>> main

@@ -1,9 +1,0 @@
-{
-  "name": "FastAPI Dev",
-  "build": {
-    "dockerfile": "Dockerfile"
-  },
-  "runArgs": ["--privileged"],
-  "postCreateCommand": "bash setup.sh",
-  "features": {}
-}

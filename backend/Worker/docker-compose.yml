@@ -1,0 +1,11 @@
+services:
+  worker:
+    build: .
+    container_name: worker
+    environment:
+      PYTHONPATH: /app
+      MONGO_URI: "mongodb://mongodb:27017/"
+      RABBITMQ_HOST: "host.docker.internal"
+      RABBITMQ_PORT: "5672"
+      RABBITMQ_USER: "erik"
+      RABBITMQ_PASS: "erik"

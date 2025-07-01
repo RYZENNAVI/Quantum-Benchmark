@@ -1,0 +1,8 @@
+{
+  "circuit": [
+    { "gate": "MEASURE", "wires": [0] },
+    { "gate": "RY", "wires": [1], "params": ["undefined_param"] }
+  ],
+  "parameters": ["theta_1"],
+  "inputs": []
+}

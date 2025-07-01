@@ -1,0 +1,20 @@
+[
+   {
+      "id":1,
+      "name":"Amplitude Embedding",
+      "url":"https://docs.pennylane.ai/en/stable/code/api/pennylane.AmplitudeEmbedding.html",
+      "description":"Amplitude embedding encodes 2^n features into the amplitude vector of n qubits. It encodes a vector x with a length of N into amplitudes of an n-qubit state.\nWith amplitude embedding, we can map complex or high dimensional features to fewer qubits."
+   },
+  {
+      "id":2,
+      "name":"Angle Embedding",
+      "url":"https://docs.pennylane.ai/en/stable/code/api/pennylane.AngleEmbedding.html",
+      "description":"Angle embedding encodes N features into the rotation of n qubits, where N ≤ n.\nAngle embedding allows us to convert classical data into a form that can be used in quantum computing."
+   },
+  {
+      "id":3,
+      "name":"Basis Embedding",
+      "url":"https://docs.pennylane.ai/en/stable/code/api/pennylane.BasisEmbedding.html",
+      "description":"Basis embedding associates each input with a computational basis state of a qubit system. Therefore, classical data has to be in the form of binary strings. \nThe embedded quantum state is the bit-wise translation of a binary string to the corresponding states of the quantum subsystems. For example, x=1001 is represented by the 4-qubit quantum state |1001⟩. Hence, one bit of classical information is represented by one quantum subsystem."
+   }
+]

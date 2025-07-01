@@ -1,0 +1,9 @@
+{
+  "circuit": [
+    { "gate": "RZ", "wires": [1], "params": [3.14] },
+    { "gate": "CZ", "wires": [1], "control": [0] },
+    { "gate": "MEASURE", "wires": [1] }
+  ],
+  "parameters": [],
+  "inputs": []
+}

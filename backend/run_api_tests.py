@@ -1,31 +1,17 @@
 import os
 import json
-from pathlib import Path
 import requests
-from typing import Union
 
 BASE_URL = os.getenv("API_URL", "http://localhost:8000/api")
 
-# ---------------------------------------------------------------------------
-# Example directories
-# ---------------------------------------------------------------------------
-# After restructuring, the FastAPI backend has been moved under ``backend/``.
-# To make the script robust regardless of the working directory, we build the
-# paths relative to the current file location instead of the current working
-# directory.
-
-_ROOT_DIR = Path(__file__).resolve().parent  # quantum-encoding-benchmark/
-_BACKEND_DIR = _ROOT_DIR / "backend" / "fastapi_app"
-
-ENCODING_EXAMPLE_DIR = _BACKEND_DIR / "quantum_validator" / "example"
-DATASET_EXAMPLE_DIR = _BACKEND_DIR / "examples" / "dataset"
-RUN_EXAMPLE_DIR = _BACKEND_DIR / "examples" / "run"
-RESULT_EXAMPLE_DIR = _BACKEND_DIR / "examples" / "result"
+ENCODING_EXAMPLE_DIR = os.path.join("FastAPI_app", "quantum_validator", "example")
+DATASET_EXAMPLE_DIR = os.path.join("FastAPI_app", "examples", "dataset")
+RUN_EXAMPLE_DIR = os.path.join("FastAPI_app", "examples", "run")
+RESULT_EXAMPLE_DIR = os.path.join("FastAPI_app", "examples", "result")
 
 
-def load_example(directory: Union[Path, str], name: str):
-    """Load an example JSON file and return its parsed content."""
-    path = Path(directory) / name
+def load_example(directory, name):
+    path = os.path.join(directory, name)
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
@@ -221,8 +207,6 @@ def run_tests():
     # ==== Cleanup ====
     print("\nCleaning up: deleting all encodings...")
     for item in encodings:
-        if not isinstance(item, dict):
-            continue
         obj_id = item.get("_id")
         if obj_id:
             resp = requests.delete(f"{BASE_URL}/encoding/{obj_id}")

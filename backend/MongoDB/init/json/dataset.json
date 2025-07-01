@@ -1,0 +1,20 @@
+[
+   {
+      "id":1,
+      "name":"Bars and Stribes",
+      "url":"https://pennylane.ai/datasets/bars-and-stripes",
+      "description":"The dataset “Stripes and Bars” (https://pennylane.ai/datasets/bars-and-stripes) from the Python package Pennylane is a collection of images containing patterns of stripes and bars. The dataset contains 1000 datasets consisting of an image and a label. The labels correspond to\n\n```\n-1  =  horizontal/stripes\n 1  =  vertical/bars\n```"
+   },
+  {
+      "id":2,
+      "name":"Digits",
+      "url":"https://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_digits.html#sklearn.datasets.load_digits",
+      "description":"The dataset \"Digits 0 and 1 (Downscaled)\" (https://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_digits.html#sklearn.datasets.load_digits) is a filtered and processed subset of the “Digits” dataset from the sklearn.datasets module. The original dataset consists of 8×8 grayscale images of handwritten digits (0–9), with approximately 180 samples per class and a total of 1797 images.\nIn this subset, only the digits 0 and 1 are selected, resulting in a smaller binary classification dataset. Each selected image is resized to 3×3 pixels using reflective interpolation and then flattened to a 9-dimensional vector with normalized pixel values.\n```\n0  =  Label 0\n1  =  Label 1\n```"
+   },
+  {
+      "id":3,
+      "name":"Binary Blobs",
+      "url":"https://pennylane.ai/datasets/binary-blobs",
+      "description":"The dataset “Binary Blobs 0 and 1 (Downscaled)” (https://pennylane.ai/datasets/binary-blobs) is a filtered and processed subset of the “Binary Blobs” dataset from the Python package Pennylane.\nThe original dataset consists of 4×4 grayscale images, each assigned to one of 8 patterns. The original dataset consists of 5000 training data and 10000 test data. \nIn this subset, only the first two patterns are selected, resulting in a smaller binary classification dataset. Each selected image is resized to 3×3 pixels by reflective interpolation and then smoothed into a 9-dimensional vector with normalized pixel values.\n\n```\n0  =  pale square in the top left-hand corner\n1  =  pale square in the top right-hand corner\n```"
+   }
+]

@@ -1,8 +1,0 @@
-{
-  "circuit": [
-    { "type": "MEASURE", "target": [0] },
-    { "type": "RY", "target": [1], "params": ["undefined_param"] }
-  ],
-  "parameters": ["theta_1"],
-  "inputs": []
-}

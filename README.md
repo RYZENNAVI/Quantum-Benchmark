@@ -29,14 +29,35 @@ docker-compose up --build
 This will start all three services and expose the FastAPI application on
 `http://localhost:8000`.
 
+### Start backend worker
+The worker requires a Docker setup, and all three backend services must be running (see above). <br>
+Now you can run the worker container by starting the docker-compose file from the worker folder:
+
+```bash
+cd Worker
+docker-compose up --build
+```
+The worker currently only connects if RabbitMQ is running on the same device in a different Docker network.
+
 ### Using the Swagger UI
 FastAPI provides interactive API documentation via Swagger UI. Once the services
 are running, open your browser and navigate to `http://localhost:8000/docs` to
 view and test the available endpoints. An alternative ReDoc interface is
 available at `http://localhost:8000/redoc`.
 
+### Using the RabbitMQ Management
+RabbitMQ provides a web-based management interface for monitoring and managing your message broker.  
+Once the services are running, open your browser and navigate to `http://localhost:15672/` to access the interface.
+
+Use the following credentials to log in:
+
+- **Username:** `erik`  
+- **Password:** `erik`
+
+From the management dashboard, you can inspect queues, exchanges, connections, and message throughput in real time.
+
+
 ## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
 
 Encodings can be entered as json files and a benchmark can be created for them. The json file must have the following structure:
 ```json
@@ -47,37 +68,11 @@ Encodings can be entered as json files and a benchmark can be created for them. 
   {"gate": "RZ", "wires":  [1], "params":  ["0.33"]}
 ]
 ```
+To do: Alle Funktionen aus Nutzersicht beschreiben
 
-## Input data for machine learning
-### Bars and Stribes
-The dataset “Stripes and Bars” (https://pennylane.ai/datasets/bars-and-stripes) from the Python package Pennylane is a collection of images containing patterns of stripes and bars. The dataset contains 1000 datasets consisting of an image and a label. The labels correspond to
+## Documentation
 
-```
--1  =  horizontal/stripes
- 1  =  vertical/bars
-```
-
-### Digits
-The dataset "Digits 0 and 1 (Downscaled)" (https://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_digits.html#sklearn.datasets.load_digits) is a filtered and processed subset of the “Digits” dataset from the sklearn.datasets module. The original dataset consists of 8×8 grayscale images of handwritten digits (0–9), with approximately 180 samples per class and a total of 1797 images.
-In this subset, only the digits 0 and 1 are selected, resulting in a smaller binary classification dataset. Each selected image is resized to 3×3 pixels using reflective interpolation and then flattened to a 9-dimensional vector with normalized pixel values.
-```
-0  =  Label 0
-1  =  Label 1
-```
-
-### Binary Blobs
-The dataset “Binary Blobs 0 and 1 (Downscaled)” (https://pennylane.ai/datasets/binary-blobs) is a filtered and processed subset of the “Binary Blobs” dataset from the Python package Pennylane.
-The original dataset consists of 4×4 grayscale images, each assigned to one of 8 patterns. The original dataset consists of 5000 training data and 10000 test data. 
-In this subset, only the first two patterns are selected, resulting in a smaller binary classification dataset. Each selected image is resized to 3×3 pixels by reflective interpolation and then smoothed into a 9-dimensional vector with normalized pixel values.
-
-```
-0  =  pale square in the top left-hand corner
-1  =  pale square in the top right-hand corner
-```
-
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+Further documentation can be found [here](Documentation).
 
 ## Authors and acknowledgment
 Show your appreciation to those who have contributed to the project.
