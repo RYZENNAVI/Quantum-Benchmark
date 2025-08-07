@@ -25,9 +25,9 @@ services:
   fastapi:
     image: python:3.11-slim
     container_name: fastapi
-    working_dir: /app/FastAPI_app
+    working_dir: /app/fastapi_app
     volumes:
-      - ./FastAPI_app:/app/FastAPI_app
+      - ./fastapi_app:/app/fastapi_app
     ports:
       - "8000:8000"
     environment:
@@ -42,7 +42,21 @@ services:
       - rabbitmq
     command: >
       sh -c "pip install --no-cache-dir -r requirements.txt &&
-             uvicorn FastAPI_app.main:app --host 0.0.0.0 --port 8000"
+             uvicorn fastapi_app.main:app --host 0.0.0.0 --port 8000"
+
+  worker:
+    build: ./Worker
+    container_name: worker
+    environment:
+      PYTHONPATH: /app
+      MONGO_URI: "mongodb://mongodb:27017/"
+      RABBITMQ_HOST: "rabbitmq"
+      RABBITMQ_PORT: "5672"
+      RABBITMQ_USER: "erik"
+      RABBITMQ_PASS: "erik"
+    depends_on:
+      - mongodb
+      - rabbitmq
 
 volumes:
   mongo_data:

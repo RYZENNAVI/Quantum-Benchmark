@@ -1,12 +1,12 @@
 {
     "compilerOptions": {
-        "baseUrl": ".", // 这里必须有
+        "baseUrl": ".", // This must be here
         "paths": {
             "@/*": [
                 "src/*"
-            ] // 路径别名，让 @ 指向 src
+            ] // Path alias, let @ point to src
         },
-        "jsx": "react-jsx", // 若已有更完整的 tsconfig，可忽略这一行
+        "jsx": "react-jsx", // If you already have a more complete tsconfig, you can ignore this line
         "module": "ESNext",
         "moduleResolution": "Node",
         "target": "ESNext"

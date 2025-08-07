@@ -31,7 +31,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     {/* DnD Provider */}
     <DndProvider backend={HTML5Backend}>
-      {/* Global circuit state Provider */}
+      {/* Global quantum circuit state Provider */}
       <CircuitProvider>
         {/* Routing */}
         <BrowserRouter>

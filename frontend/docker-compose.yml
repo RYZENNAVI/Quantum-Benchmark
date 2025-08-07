@@ -3,14 +3,20 @@ services:
     build: .
     container_name: quantum-frontend
     ports:
-      - "5185:5185" # 修改为与vite配置相同的端口
+      - "5185:5185" # Modified to match Dockerfile exposed port
     volumes:
       - .:/app
       - /app/node_modules
     environment:
       - NODE_ENV=development
-      - VITE_API_URL=http://host.docker.internal:8000 # 使用特殊DNS名称访问宿主机
-      - CHOKIDAR_USEPOLLING=true # 启用轮询监听文件变化
-      - WATCHPACK_POLLING=true # webpack的文件监听
+      - VITE_API_URL=http://host.docker.internal:8000 # Use special DNS name to access host machine
+      - CHOKIDAR_USEPOLLING=true # Enable polling for file changes
+      - WATCHPACK_POLLING=true # webpack file watching
     extra_hosts:
-      - "host.docker.internal:host-gateway" # 添加host.docker.internal解析
+      - "host.docker.internal:host-gateway" # Add host.docker.internal resolution
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G

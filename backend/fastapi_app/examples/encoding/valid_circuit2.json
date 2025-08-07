@@ -1,9 +1,10 @@
 {
+  "name": "Two-Qubit Encoding Circuit",
   "circuit": [
-    { "gate": "RZ", "wires": [1], "params": [3.14] },
-    { "gate": "CZ", "wires": [1], "control": [0] },
-    { "gate": "MEASURE", "wires": [1] }
+    { "gate": "RX", "wires": [0], "params": ["input_0"] },
+    { "gate": "RY", "wires": [1], "params": ["input_1"] },
+    { "gate": "CNOT", "wires": [0, 1], "params": [] },
+    { "gate": "H", "wires": [1], "params": [] }
   ],
-  "parameters": [],
-  "inputs": []
+  "qubit_count": 2
 }

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Body
-from FastAPI_app.models import ReferenceData, EncodingInfo, AnsatzInfo, DatasetInfo
-from FastAPI_app.db import get_db
-from datetime import datetime
+from fastapi_app.models import ReferenceData, EncodingInfo, AnsatzInfo, DatasetInfo
+from fastapi_app.db import get_db
+from datetime import datetime, UTC
 import traceback
 from bson import ObjectId
 from bson.errors import InvalidId
@@ -37,8 +37,8 @@ async def create_reference_data(reference_data: ReferenceData = Body(...)):
     try:
         db = get_db()
         result = db.referenceData.insert_one({
-            "data": reference_data.dict(),
-            "timestamp": datetime.utcnow()
+            "data": reference_data.model_dump(),
+            "timestamp": datetime.now(UTC)
         })
         return {"message": f"Created reference data with ID {str(result.inserted_id)}", "id": str(result.inserted_id)}
     except Exception:
@@ -89,8 +89,8 @@ def update_reference_data_by_id(object_id: str, reference_data: ReferenceData = 
     result = db.referenceData.update_one(
         {"_id": obj_id},
         {"$set": {
-            "data": reference_data.dict(),
-            "timestamp": datetime.utcnow()
+            "data": reference_data.model_dump(),
+            "timestamp": datetime.now(UTC)
         }}
     )
     if result.matched_count == 0:

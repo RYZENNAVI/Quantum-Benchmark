@@ -1,15 +1,14 @@
 // src/constants/benchmarks.js
 
 /**
- * Sample constants file. The frontend can obtain the list of datasets, ansatz, and baselines
- * by calling the `/api/benchmarks` endpoint or directly reading these constants.
- * Adjust according to the structure returned by the backend.
+ * Example constant file, frontend obtains datasets, ansatz, and baselines lists
+ * through the `/api/benchmarks` interface or directly reads these constants.
+ * You can adjust according to the structure returned by the backend.
  */
 
 export const SAMPLE_DATASETS = [
-
   {
-    id: 'bars-and-stripes',
+    id: 1,
     name: 'Bars and Stripes',
     description: 'Synthetic Bars-and-Stripes toy dataset, 4×4 binary images.',
     samples: 16,
@@ -17,43 +16,43 @@ export const SAMPLE_DATASETS = [
     classes: 2,
     visualizationText: [
       'Original image: 4×4 binary',
-      'After downsampling: 3×3 grayscale',
+      'Downsampled: 3×3 grayscale',
       'Can be used to demonstrate dimensionality reduction'
     ]
   },
   {
-    id: 'digits-0-1',
+    id: 2,
     name: 'Digits 0 vs 1',
-    description: 'MNIST-like dataset containing only digits 0 and 1.',
+    description: 'MNIST-like dataset, containing only 0 and 1 image samples.',
     samples: 360,
     features: 9, // Downsampled to 3×3
     classes: 2,
     visualizationText: [
       'Original image: 8×8 grayscale',
-      'After downsampling: 3×3 grayscale',
-      'Only classes 0 and 1 are kept'
+      'Downsampled: 3×3 grayscale',
+      'Only 0 and 1 classes'
     ]
   },
   {
-    id: 'binary-blobs',
+    id: 3,
     name: 'Binary Blobs',
-    description: 'Synthetic Binary Blobs dataset containing only labels 0 and 1.',
+    description: 'Synthetic Binary Blobs dataset, containing only labels 0 and 1.',
     samples: 32,
     features: 9, // Downsampled to 3×3
     classes: 2,
     visualizationText: [
       'Original image: 4×4 binary',
-      'After downsampling: 3×3 grayscale',
-      'Labels 0 vs 1 only'
+      'Downsampled: 3×3 grayscale',
+      'Only label 0 vs 1'
     ]
   }
 ];
 
 export const SAMPLE_ANSATZ = [
   {
-    id: 'ans1',
-    name: 'Hardware-Efficient Ansatz',
-    description: 'Composed of alternating RX/RZ layers, suitable for NISQ hardware.',
+    id: 2,
+    name: 'Random Layers',
+    description: 'A flexible ansatz that uses random quantum gates to create complex quantum circuits.',
     "circuit": [
       {
         "id": "Bo4s6B",
@@ -69,58 +68,18 @@ export const SAMPLE_ANSATZ = [
     "inputs": []
   },
   {
-    id: 'ans2',
-    name: 'QAOA Ansatz',
-    description: 'Typical circuit structure used in the Quantum Approximate Optimization Algorithm (QAOA).',
+    id: 1,
+    name: 'Hardware-Efficient Ansatz',
+    description: 'Composed of alternating RX/RZ layers, suitable for NISQ hardware.',
     "circuit": [
       {
-        "id": "pjZXwH",
-        "type": "Y",
-        "target": [
-          1
-        ],
-        "params": [],
-        "timeStep": 1
-      },
-      {
-        "id": "MryzcW",
-        "type": "RX",
-        "target": [
-          0
-        ],
-        "params": [
-          0
-        ],
-        "timeStep": 3
-      },
-      {
-        "id": "u9Ph5m",
-        "type": "RY",
-        "target": [
-          0
-        ],
-        "params": [
-          0
-        ],
-        "timeStep": 1
-      },
-      {
-        "id": "Ej-4BH",
+        "id": "Bo4s6B",
         "type": "H",
         "target": [
-          1
+          0
         ],
         "params": [],
-        "timeStep": 5
-      },
-      {
-        "id": "n5b43l",
-        "type": "Y",
-        "target": [
-          2
-        ],
-        "params": [],
-        "timeStep": 4
+        "timeStep": 0
       }
     ],
     "parameters": [],
@@ -130,18 +89,18 @@ export const SAMPLE_ANSATZ = [
 
 export const SAMPLE_BASELINES = [
   {
-    id: 'bl1',
+    id: 1,
     name: 'Identity Baseline',
-    description: 'Identity operation, no quantum gates applied.',
+    description: 'No quantum gates applied.',
     circuit: {
       qubits: 4,
       gates: []
     }
   },
   {
-    id: 'bl2',
+    id: 2,
     name: 'Single-H Baseline',
-    description: 'Apply a Hadamard gate only on qubit 0.',
+    description: 'Only Hadamard gate applied on qubit 0.',
     circuit: {
       qubits: 4,
       gates: [
@@ -150,9 +109,9 @@ export const SAMPLE_BASELINES = [
     }
   },
   {
-    id: 'bl3',
+    id: 3,
     name: 'Amplitude Embedding',
-    description: 'Use AmplitudeEmbedding to load feature vectors into quantum amplitudes.',
+    description: 'Loads feature vector into quantum amplitude using AmplitudeEmbedding.',
     circuit: {
       qubits: 4,
       gates: [

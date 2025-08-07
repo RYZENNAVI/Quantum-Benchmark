@@ -1,7 +1,7 @@
-// postcss.config.js   ✅ 推荐
+// postcss.config.js   ✅ Recommended
 module.exports = {
   plugins: [
-    require('tailwindcss'),   // <== 数组元素
+    require('tailwindcss'),   // <== Array element
     require('autoprefixer'),
   ],
 };

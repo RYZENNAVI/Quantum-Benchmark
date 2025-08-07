@@ -1,23 +1,23 @@
-# 使用Node.js作为基础镜像
+# Use Node.js as base image
 FROM node:20-slim
 
-# 设置工作目录
+# Set working directory
 WORKDIR /app
 
-# 复制package.json和package-lock.json
+# Copy package.json and package-lock.json
 COPY package*.json ./
 
-# 安装依赖
+# Install dependencies
 RUN npm install
 
-# 复制项目文件
+# Copy project files
 COPY . .
 
-# 构建项目
+# Build project
 RUN npm run build
 
-# 暴露端口
+# Expose port
 EXPOSE 5185
 
-# 启动开发服务器
+# Start development server
 CMD ["npm", "run", "dev", "--", "--host"] 

@@ -1,4 +1,4 @@
-// Draw horizontal lines, highlightable
+// Draw horizontal lines, can highlight
 export default function QuantumLines({ rows, width, hoveredRow }) {
     return (
         <svg className="absolute inset-0 pointer-events-none">

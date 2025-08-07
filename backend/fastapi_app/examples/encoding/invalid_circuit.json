@@ -1,8 +1,9 @@
 {
+  "name": "Invalid Circuit Example",
   "circuit": [
-    { "gate": "MEASURE", "wires": [0] },
-    { "gate": "RY", "wires": [1], "params": ["undefined_param"] }
+    { "gate": "RX", "wires": [0], "params": ["input_0", "input_1"] },
+    { "gate": "H", "wires": [1], "params": [3.14] },
+    { "gate": "CNOT", "wires": [0], "params": [] }
   ],
-  "parameters": ["theta_1"],
-  "inputs": []
+  "qubit_count": 2
 }

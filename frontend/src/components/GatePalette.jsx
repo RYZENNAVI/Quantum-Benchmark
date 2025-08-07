@@ -24,7 +24,7 @@
 
 //     return (
 //         <div className={`p-4 border-r ${className}`}>
-//             {/* 搜索框 */}
+//             {/* Search box */}
 //             <input
 //                 type="text"
 //                 placeholder="Search…"
@@ -33,7 +33,7 @@
 //                 className="mb-4 w-full rounded border px-3 py-1 text-sm"
 //             />
 
-//             {/* 两列网格 */}
+//             {/* Two-column grid */}
 //             <div className="grid grid-cols-2 gap-3">
 //                 {list.map(g => (
 //                     <PaletteGate
@@ -51,27 +51,13 @@
 // src/components/GatePalette.jsx
 import { useState, useRef, useEffect } from 'react';
 import PaletteGate from '@/components/PaletteGate.jsx';
-import { GATE_DEFS } from '@/constants/gates';
+import { GATE_DEFS, GATE_COLORS } from '@/constants/gates';
 
-// 修改量子门的颜色映射，使用与图片一致的颜色
-const gateColors = {
-    H: 'bg-blue-500',
-    X: 'bg-red-500',
-    Y: 'bg-orange-500',
-    Z: 'bg-purple-500',
-    RX: 'bg-green-500',
-    RY: 'bg-teal-500',
-    RZ: 'bg-blue-600',
-    CNOT: 'bg-indigo-500',
-    CZ: 'bg-purple-600',
-    SWAP: 'bg-pink-500'
-};
-
-// 悬浮提示组件
+// Floating tooltip component
 const GateInfoTooltip = ({ gate, onClose }) => {
     if (!gate) return null;
 
-    // 每个门的详细信息
+    // Detailed information for each gate
     const GATE_INFO = {
         H: {
             title: 'Hadamard Gate (H)',
@@ -116,27 +102,31 @@ const GateInfoTooltip = ({ gate, onClose }) => {
             reference: 'https://qiskit.org/documentation/stubs/qiskit.circuit.library.RZGate.html'
         },
         CNOT: {
-            title: 'Controlled-NOT Gate (CNOT)',
-            description: 'Flips the target qubit if the control qubit is in state |1>.',
-            usage: 'OpenQASM: cx q[0],q[1];',
+            title: 'Controlled-NOT Gate',
+            description: 'Flips the target qubit if the control qubit is |1>.',
+            usage: 'OpenQASM: cx q[0], q[1];',
             reference: 'https://qiskit.org/documentation/stubs/qiskit.circuit.library.CXGate.html'
         },
         CZ: {
-            title: 'Controlled-Z Gate (CZ)',
-            description: 'Applies Z to the target qubit if the control qubit is |1>.',
-            usage: 'OpenQASM: cz q[0],q[1];',
+            title: 'Controlled-Z Gate',
+            description: 'Applies a Z gate on the target qubit if the control qubit is |1>.',
+            usage: 'OpenQASM: cz q[0], q[1];',
             reference: 'https://qiskit.org/documentation/stubs/qiskit.circuit.library.CZGate.html'
         },
         SWAP: {
             title: 'SWAP Gate',
-            description: 'Exchanges the states of two qubits.',
-            usage: 'OpenQASM: swap q[0],q[1];',
+            description: 'Swaps the states of two qubits.',
+            usage: 'OpenQASM: swap q[0], q[1];',
             reference: 'https://qiskit.org/documentation/stubs/qiskit.circuit.library.SwapGate.html'
-        },
+        }
     };
 
-    const info = GATE_INFO[gate];
-    if (!info) return null;
+    const info = GATE_INFO[gate] || {
+        title: gate,
+        description: 'No description available.',
+        usage: 'No usage information available.',
+        reference: '#'
+    };
 
     return (
         <div className="bg-white border border-gray-300 rounded-md shadow-lg p-3 z-50 w-64">
@@ -169,12 +159,12 @@ export default function GatePalette({ className = '' }) {
     const [selectedGate, setSelectedGate] = useState(null);
     const containerRef = useRef(null);
 
-    // 处理点击门事件
+    // Handle gate click event
     const handleGateClick = (e) => {
         const gate = e.currentTarget.dataset.type;
         if (!gate) return;
 
-        // 如果点击了当前选中的门，则取消选择
+        // If clicked on currently selected gate, deselect it
         if (selectedGate === gate) {
             setSelectedGate(null);
         } else {
@@ -182,7 +172,7 @@ export default function GatePalette({ className = '' }) {
         }
     };
 
-    // 点击其他区域关闭悬浮窗
+    // Click outside to close floating window
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (selectedGate &&
@@ -199,7 +189,7 @@ export default function GatePalette({ className = '' }) {
         };
     }, [selectedGate]);
 
-    // 从GATE_DEFS获取所有门
+    // Get all gates from GATE_DEFS
     const gates = Object.entries(GATE_DEFS).map(([value, def]) => ({
         value,
         label: def.label
@@ -207,26 +197,26 @@ export default function GatePalette({ className = '' }) {
 
     return (
         <div className={`flex flex-col p-2 relative ${className}`} ref={containerRef}>
-            {/* 门网格 - 使用grid布局 */}
+            {/* Gate grid - using grid layout */}
             <div className="grid grid-cols-2 gap-4">
                 {gates.map(gate => (
                     <div key={gate.value} className="flex flex-col items-center">
-                        {/* 每个门的容器 - 添加白色背景和边框 */}
+                        {/* Container for each gate - add white background and border */}
                         <div className="w-full bg-white border border-gray-200 rounded-md p-2 flex flex-col items-center">
                             <PaletteGate
                                 value={gate.value}
                                 label={gate.value}
-                                className={`${gateColors[gate.value]} w-12 h-12 flex items-center justify-center rounded-md shadow-sm text-white`}
+                                className={`${GATE_COLORS[gate.value].bg} border-2 ${GATE_COLORS[gate.value].border} w-12 h-12 flex items-center justify-center rounded-md shadow-sm text-white`}
                                 onClick={handleGateClick}
                             />
-                            {/* 门的名称标签 */}
+                            {/* Gate name label */}
                             <div className="mt-1 text-xs text-gray-700">{gate.value}</div>
                         </div>
                     </div>
                 ))}
             </div>
 
-            {/* 中央悬浮窗 - 使用绝对定位并覆盖整个区域 */}
+            {/* Central floating window - use absolute positioning and cover entire area */}
             {selectedGate && (
                 <div className="absolute top-0 left-0 right-0 bottom-0 flex items-center justify-center bg-black bg-opacity-5 z-50 gate-info-tooltip">
                     <GateInfoTooltip

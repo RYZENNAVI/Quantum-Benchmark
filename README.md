@@ -11,10 +11,12 @@ Given their importance, systematically benchmarking quantum encodings is essenti
 This software project focuses on addressing that challenge by developing a dedicated benchmarking application for quantum encodings in VQAs. The goal is to provide a web application, which allows users to upload, evaluate, and compare different encodings across a variety of datasets and algorithmic setups, laying the groundwork for more efficient and interpretable QML systems. 
 
 ## Installation
+### Requirments
+Docker required
 
 ### Start backend services
 The project provides a Docker setup for running the FastAPI server,
-MongoDB and RabbitMQ. From the repository root simply execute:
+MongoDB and RabbitMQ. Switch to folder /backend and simply execute:
 
 ```bash
 docker-compose up

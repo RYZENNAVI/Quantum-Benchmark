@@ -1,6 +1,5 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator, field_validator, ConfigDict
 from typing import List, Optional, Union, Dict, Any
-from pydantic import root_validator
 
 class Gate(BaseModel):
     """Single quantum gate definition.
@@ -33,7 +32,8 @@ class Gate(BaseModel):
             values[new_key] = values[old_key]
         return values
 
-    @root_validator(pre=True)
+    @model_validator(mode='before')
+    @classmethod
     def sync_aliases(cls, values):
         # gate / type
         values = cls._ensure_alias(values, 'gate', 'type')
@@ -41,14 +41,34 @@ class Gate(BaseModel):
         values = cls._ensure_alias(values, 'wires', 'target')
         return values
 
-    class Config:
-        extra = 'allow'  # Ignore unexpected keys to stay permissive
+    model_config = ConfigDict(extra='allow')  # Ignore unexpected keys to stay permissive
 
 class CircuitData(BaseModel):
+    """Schema for a quantum encoding circuit.
+
+    Top-level ``parameters`` and ``inputs`` have been deprecated.  Each gate now
+    stores its own parameter references directly in the ``params`` list using
+    either a numeric constant or the placeholder ``"input_<index>"``.
+    ``parameters`` and ``inputs`` remain *optional* to allow backward
+    compatibility but are no longer validated or required.
+    """
+
     circuit: List[Gate]
-    parameters: List[str]
-    inputs: List[str]
-    qubits: Optional[int] = None
+
+    # New preferred name -------------------------------------------------------
+    qubit_count: Optional[int] = Field(None, alias="qubit_count")
+    # Legacy alias still accepted
+    qubits: Optional[int] = Field(None, alias="qubits")
+
+    @model_validator(mode='before')
+    @classmethod
+    def sync_qubit_aliases(cls, values):
+        """Mirror values between *qubit_count* and the legacy *qubits* key."""
+        if 'qubit_count' in values and 'qubits' not in values:
+            values['qubits'] = values['qubit_count']
+        elif 'qubits' in values and 'qubit_count' not in values:
+            values['qubit_count'] = values['qubits']
+        return values
 
 class ValidationResult(BaseModel):
     valid: bool
@@ -79,16 +99,26 @@ class ReferenceData(BaseModel):
 
 # Models for Run Benchmark API
 class RunBenchmarkRequest(BaseModel):
-    encoding_id: int
-    ansatz_id: int
-    data_id: int
+    encoding_id: Union[int, List[int]]
+    ansatz_id: Union[int, List[int]]
+    data_id: Union[int, List[int]]
+
+    @field_validator("encoding_id", "ansatz_id", "data_id", mode='before')
+    @classmethod
+    def ensure_int_or_int_list(cls, v):
+        if isinstance(v, (int, str)):
+            return int(v)
+        if isinstance(v, list):
+            return [int(item) for item in v]
+        raise ValueError("Value must be an integer or a list of integers")
 
 class RunBenchmarkResponse(BaseModel):
     message: str
-    id: str
+    id: int
 
 # Models for Benchmark Result API
 class BenchmarkResult(BaseModel):
+    run_id: int
     encoding_id: int
     ansatz_id: int
     data_id: int
@@ -107,18 +137,19 @@ class AnsatzResultInfo(BaseModel):
 
 class BenchmarkResultResponse(BaseModel):
     results: List[BenchmarkResult]
-    encodings: Dict[str, EncodingResultInfo]
-    ansaetze: Dict[str, AnsatzResultInfo]
+    encodings: Dict[int, EncodingResultInfo]
+    ansaetze: Dict[int, AnsatzResultInfo]
 
 # Models for Multi-Resource Fetch API
 class ResourceFetchRequest(BaseModel):
-    encoding_ids: Optional[List[str]] = Field(default_factory=list)
-    ansatz_ids: Optional[List[str]] = Field(default_factory=list)
-    dataset_ids: Optional[List[str]] = Field(default_factory=list)
+    encoding_ids: Optional[List[int]] = Field(default_factory=list)
+    ansatz_ids: Optional[List[int]] = Field(default_factory=list)
+    dataset_ids: Optional[List[int]] = Field(default_factory=list)
     full: bool = False
 
 class ResourceFetchResponse(BaseModel):
     """Aggregated response containing the requested resources."""
-    encodings: Dict[str, Any] = Field(default_factory=dict)
-    ansaetze: Dict[str, Any] = Field(default_factory=dict)
-    datasets: Dict[str, Any] = Field(default_factory=dict)
+    encodings: Dict[int, Any] = Field(default_factory=dict)
+    ansaetze: Dict[int, Any] = Field(default_factory=dict)
+    datasets: Dict[int, Any] = Field(default_factory=dict)
+

@@ -7,7 +7,7 @@
 //     const qasmRef = useRef("");
 
 //     useEffect(() => {
-//         // 1) Create a QNode in the browser with pennylane-js
+//         // 1) Create a QNode in browser using pennylane-js
 //         const dev = new qml.device("default.qubit", { wires: 3 });
 //         const circuit = new qml.QNode(
 //             ({ theta }) => {
@@ -19,8 +19,8 @@
 //             dev
 //         );
 
-//         // 2) Serialize into OpenQASM
-//         //    There is a toQASM() in pennylane-js — if not available, you can manually generate from circuit.ops
+//         // 2) Serialize to OpenQASM
+//         //    pennylane-js has toQASM() — if not, can manually generate from circuit.ops
 //         const qasm = qml.toOpenQASM(circuit);
 //         qasmRef.current = qasm;
 //     }, [params]);
@@ -29,7 +29,7 @@
 //         return <div>Loading circuit…</div>;
 //     }
 
-//     // 3) Hand over to react-quantum-circuit to render
+//     // 3) Hand over to react-quantum-circuit for rendering
 //     return (
 //         <div className="p-4 bg-background">
 //             <Circuit

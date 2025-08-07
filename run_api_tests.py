@@ -186,18 +186,20 @@ def run_tests():
     # ==== Run API ====
     run_ids = []
     print("\nTesting valid run requests...")
-    for name in ["valid_run1.json", "valid_run2.json", "valid_run3.json"]:
+    for name in ["valid_run1.json", "valid_run2.json", "valid_run3.json", "valid_multi_run.json"]:
         data = load_example(RUN_EXAMPLE_DIR, name)
         result, resp = test_post_run(data, name)
         if isinstance(result, dict) and "id" in result:
             try:
                 run_ids.append(int_to_object_id(int(result["id"])))
             except Exception:
-                pass
+                # For multi-run, id may already be an ObjectId-like string
+                run_ids.append(result["id"])
 
     print("\nTesting invalid run request...")
-    invalid_run = load_example(RUN_EXAMPLE_DIR, "invalid_run.json")
-    test_post_run(invalid_run, "invalid_run.json")
+    for name in ["invalid_run.json", "invalid_multi_run.json"]:
+        data = load_example(RUN_EXAMPLE_DIR, name)
+        test_post_run(data, name)
 
     print("\nListing runs...")
     list_runs()
@@ -219,29 +221,23 @@ def run_tests():
     list_results()
 
     # ==== Cleanup ====
-    print("\nCleaning up: deleting all encodings...")
-    for item in encodings:
-        if not isinstance(item, dict):
+    print("\nCleaning up: deleting all encodings via API...")
+    # ---- Comprehensive cleanup: fetch fresh lists and delete every entry ----
+    for endpoint in ["encoding", "dataset", "run", "result"]:
+        try:
+            items = requests.get(f"{BASE_URL}/{endpoint}").json()
+        except Exception:
+            items = []
+        if not isinstance(items, list):
             continue
-        obj_id = item.get("_id")
-        if obj_id:
-            resp = requests.delete(f"{BASE_URL}/encoding/{obj_id}")
-            print(f"  - Deleted {obj_id} -> status {resp.status_code}")
-
-    print("Cleaning up: deleting all datasets...")
-    for did in dataset_ids:
-        resp = requests.delete(f"{BASE_URL}/dataset/{did}")
-        print(f"  - Deleted {did} -> status {resp.status_code}")
-
-    print("Cleaning up: deleting all runs...")
-    for rid in run_ids:
-        resp = requests.delete(f"{BASE_URL}/run/{rid}")
-        print(f"  - Deleted {rid} -> status {resp.status_code}")
-
-    print("Cleaning up: deleting all results...")
-    for rid in result_ids:
-        resp = requests.delete(f"{BASE_URL}/result/{rid}")
-        print(f"  - Deleted {rid} -> status {resp.status_code}")
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            obj_id = item.get("_id")
+            if not obj_id:
+                continue
+            resp = requests.delete(f"{BASE_URL}/{endpoint}/{obj_id}")
+            print(f"  - Deleted {endpoint} {obj_id} -> status {resp.status_code}")
 
     print("\nAll tests completed.\n")
 

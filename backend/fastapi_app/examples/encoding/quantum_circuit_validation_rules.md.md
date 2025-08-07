@@ -72,9 +72,10 @@ The order of gates in the list implicitly defines their execution order.
 
 - Rules for `params`:
   - Must be a non-empty list.
-  - Each element must be either:
-    - A numeric value within the range `[-6.2832, 6.2832]`, or
+  - Each element must be **one** of the following:
+    - A numeric value within the range `[-6.2832, 6.2832]`.
     - A string that appears in the top-level `parameters` list.
+    - A string that appears in the top-level `inputs` list.
 
 - For all other gate types:
   - The `params` field must be omitted or empty.

@@ -1,2 +1,11 @@
 pika
+optax
 pymongo
+scikit-learn
+scikit-image
+aiohttp
+fsspec
+h5py
+jax==0.4.28
+jaxlib==0.4.28
+pennylane

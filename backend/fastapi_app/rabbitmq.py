@@ -89,18 +89,17 @@ class RabbitMQ:
         self.close()
         self.connect()
 
-    def send_message(self, task_id: int, max_retries=3):
+    def send_message(self, message: str, max_retries=3):
         """
         Send a task message (task_id as string) to the TASK_QUEUE with retries.
 
         Args:
-            task_id (int): The unique identifier for the task to send.
+            task_id (str): The unique identifier for the task to send.
             max_retries (int): Number of times to retry sending on failure (default: 3).
 
         This method ensures thread safety and reconnects on failures.
         """
         attempt = 0
-        message = str(task_id)
 
         while attempt < max_retries:
             try:
@@ -115,7 +114,7 @@ class RabbitMQ:
                         body=message.encode(),
                         properties=pika.BasicProperties(delivery_mode=2)  # Persistent delivery
                     )
-                    print(f"[x] Sent task {task_id}", flush=True)
+                    print(f"[x] Sent task {message}", flush=True)
                     return  # Success, exit method
 
             except pika.exceptions.AMQPError as e:
@@ -128,7 +127,7 @@ class RabbitMQ:
                 self.reconnect()
                 attempt += 1
 
-        print(f"[!] Failed to send task {task_id} after {max_retries} attempts", flush=True)
+        print(f"[!] Failed to send task {message} after {max_retries} attempts", flush=True)
 
     def start_result_consumer(self):
         """
@@ -158,17 +157,19 @@ class RabbitMQ:
                 message = json.loads(body.decode())
                 task_id = message.get("id")
                 status = message.get("status")
+                result = message.get("result")
 
                 if status == "init":
                     db.init_progress(task_id)
                 elif status == "progress":
                     db.update_progress(task_id, message.get("progress", 0))
                 elif status == "done":
-                    db.update_progress(task_id, message.get("progress", 0))
+                    db.set_result(result)
+                    db.finished_progress(task_id)
                 else:
                     print(f"[!] Unknown status: {status}", flush=True)
 
-                print(f"[{status}] Task {task_id} → {db.get_progress(task_id)}", flush=True)
+                print(f"[{status}] Task {task_id} → {db.get_benchmarkRuns(task_id)}", flush=True)
                 ch.basic_ack(delivery_tag=method.delivery_tag)
 
             except Exception as e:

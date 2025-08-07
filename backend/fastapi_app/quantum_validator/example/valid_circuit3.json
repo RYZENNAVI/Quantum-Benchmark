@@ -1,9 +1,12 @@
 {
+  "name": "Three-Qubit Encoding Circuit",
   "circuit": [
-    { "gate": "RX", "wires": [0], "params": ["theta_1"] },
-    { "gate": "RY", "wires": [1], "params": ["theta_2"] },
-    { "gate": "MEASURE", "wires": [0, 1] }
+    { "gate": "RX", "wires": [0], "params": ["input_0"] },
+    { "gate": "RY", "wires": [1], "params": ["input_1"] },
+    { "gate": "RZ", "wires": [2], "params": ["input_2"] },
+    { "gate": "H", "wires": [0], "params": [] },
+    { "gate": "CNOT", "wires": [0, 1], "params": [] },
+    { "gate": "CNOT", "wires": [1, 2], "params": [] }
   ],
-  "parameters": ["theta_1", "theta_2"],
-  "inputs": ["x_1", "x_2"]
+  "qubit_count": 3
 }

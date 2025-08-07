@@ -1,6 +1,6 @@
 // module.exports = {
 //     darkMode: ['class'],
-//     content: ['./index.html', './src/**/*.{js,jsx}'], // 路径别漏
+//     content: ['./index.html', './src/**/*.{js,jsx}'], // Don't miss the path
 //   theme: {
 //   	extend: {
 //   		borderRadius: {
@@ -68,10 +68,10 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // 全局背景色
+        // Global background color
         background: '#0F111A',
 
-        // 保留原有的基于 CSS 变量的主题色（可选）
+        // Keep original CSS variable-based theme colors (optional)
         foreground: 'hsl(var(--foreground))',
         card: {
           DEFAULT: 'hsl(var(--card))',

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Body
-from FastAPI_app.models import BenchmarkResult, BenchmarkResultResponse, EncodingResultInfo, AnsatzResultInfo
-from FastAPI_app.db import get_db
-from datetime import datetime
+from fastapi_app.models import BenchmarkResult, BenchmarkResultResponse, EncodingResultInfo, AnsatzResultInfo
+from fastapi_app.db import get_db
+from datetime import datetime, UTC
 import traceback
 from bson import ObjectId
 from bson.errors import InvalidId
@@ -38,12 +38,13 @@ async def create_benchmark_result(result: BenchmarkResult = Body(...)):
     try:
         db = get_db()
         result_doc = db.benchmarkResults.insert_one({
+            "run_id": result.run_id,
             "encoding_id": result.encoding_id,
             "ansatz_id": result.ansatz_id,
             "data_id": result.data_id,
             "loss": result.loss,
             "accuracy": result.accuracy,
-            "timestamp": datetime.utcnow()
+            "timestamp": datetime.now(UTC)
         })
         return {"message": f"Created benchmark result with ID {str(result_doc.inserted_id)}", "id": str(result_doc.inserted_id)}
     except Exception:
@@ -61,41 +62,41 @@ def get_all_benchmark_results():
         results = []
         encoding_ids = set()
         ansatz_ids = set()
-        
         for doc in results_docs:
+            # Some legacy documents might miss run_id; skip them
+            if "run_id" not in doc:
+                continue
             results.append(BenchmarkResult(
+                run_id=doc["run_id"],
                 encoding_id=doc["encoding_id"],
                 ansatz_id=doc["ansatz_id"],
                 data_id=doc["data_id"],
                 loss=doc["loss"],
                 accuracy=doc["accuracy"]
             ))
-            encoding_ids.add(str(doc["encoding_id"]))
-            ansatz_ids.add(str(doc["ansatz_id"]))
+            encoding_ids.add(doc["encoding_id"])
+            ansatz_ids.add(doc["ansatz_id"])
         
         # Get encoding information from referenceData
         encodings = {}
         ansaetze = {}
         
-        reference_docs = list(db.referenceData.find())
-        for ref_doc in reference_docs:
-            if "data" in ref_doc and "encodings" in ref_doc["data"]:
-                for enc_id, enc_info in ref_doc["data"]["encodings"].items():
-                    if enc_id in encoding_ids:
-                        encodings[enc_id] = EncodingResultInfo(
-                            depth=enc_info.get("depth", 0),
-                            name=enc_info.get("name", ""),
-                            description=enc_info.get("description", "")
-                        )
-            
-            if "data" in ref_doc and "ansaetze" in ref_doc["data"]:
-                for ans_id, ans_info in ref_doc["data"]["ansaetze"].items():
-                    if ans_id in ansatz_ids:
-                        ansaetze[ans_id] = AnsatzResultInfo(
-                            depth=ans_info.get("depth", 0),
-                            name=ans_info.get("name", ""),
-                            description=ans_info.get("description", "")
-                        )
+        ansatz_docs = list(db.ansaetze.find())
+        encoding_docs = list(db.encodings.find())
+        for doc in encoding_docs:
+            if doc["id"] in encoding_ids:
+                encodings[doc["id"]] = EncodingResultInfo(
+                    depth=doc.get("depth", 0),
+                    name=doc.get("name", ""),
+                    description=doc.get("description", "")
+                )
+        for doc in ansatz_docs:
+            if doc["id"] in ansatz_ids:
+                ansaetze[doc["id"]] = AnsatzResultInfo(
+                    depth=doc.get("depth", 0),
+                    name=doc.get("name", ""),
+                    description=doc.get("description", "")
+                )
         
         return BenchmarkResultResponse(
             results=results,
@@ -107,14 +108,10 @@ def get_all_benchmark_results():
         # TODO: Replace with more specific error message
         raise HTTPException(status_code=500, detail="DB error")
 
-@router.get("/result/{object_id}")
-def get_benchmark_result_by_id(object_id: str):
+@router.get("/result/{run_id}")
+def get_benchmark_result_by_id(run_id: int):
     db = get_db()
-    try:
-        obj_id = ObjectId(object_id)
-    except InvalidId:
-        raise HTTPException(status_code=400, detail="Invalid ID")
-    doc = db.benchmarkResults.find_one({"_id": obj_id})
+    doc = db.benchmarkResults.find_one({"run_id": run_id})
     if not doc:
         raise HTTPException(status_code=404, detail="Not found")
     doc["_id"] = str(doc["_id"])
@@ -142,12 +139,13 @@ def update_benchmark_result_by_id(object_id: str, result: BenchmarkResult = Body
     update_result = db.benchmarkResults.update_one(
         {"_id": obj_id},
         {"$set": {
+            "run_id": result.run_id,
             "encoding_id": result.encoding_id,
             "ansatz_id": result.ansatz_id,
             "data_id": result.data_id,
             "loss": result.loss,
             "accuracy": result.accuracy,
-            "timestamp": datetime.utcnow()
+            "timestamp": datetime.now(UTC)
         }}
     )
     if update_result.matched_count == 0:

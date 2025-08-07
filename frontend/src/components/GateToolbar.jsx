@@ -1,4 +1,4 @@
-// // src/components/GateToolbar.jsx
+// src/components/GateToolbar.jsx
 // import {
 //     PiPencil,
 //     PiInfo,
@@ -10,9 +10,9 @@
 
 // /**
 //  * @param {object} props
-//  * @param {boolean} props.visible Whether to display
-//  * @param {number}  props.x       Absolute left position
-//  * @param {number}  props.y       Absolute top position
+//  * @param {boolean} props.visible Whether to show
+//  * @param {number}  props.x       Absolute position left
+//  * @param {number}  props.y       Absolute position top
 //  * @param {() => void} props.onEdit
 //  * @param {() => void} props.onDelete
 //  */
@@ -50,26 +50,41 @@
 
 
 import React from "react";
-import { PiPencil, PiTrash, PiCopy } from "react-icons/pi";
+import { PiPencil, PiTrash } from "react-icons/pi";
+import { GATE_DEFS } from '@/constants/gates';
 
-export default function GateToolbar({ visible, x, y, onEdit, onDelete }) {
-    if (!visible) return null;
+export default function GateToolbar({ onGateSelect }) {
+    const handleGateClick = (gateType) => {
+        const gateDef = GATE_DEFS[gateType];
+        if (!gateDef) return;
+
+        // Create a new gate object
+        const newGate = {
+            type: gateType,
+            params: gateDef.params?.map(param => param.default ?? 0) || [],
+            id: `temp-${Date.now()}` // Temporary ID
+        };
+
+        onGateSelect(newGate);
+    };
 
     return (
-        <div
-            className="absolute inline-flex items-center gap-1
-                 bg-black/90 backdrop-blur-sm shadow-md rounded-md
-                 px-1.5 py-0.5 z-30"
-            style={{ left: x, top: y }}
-        >
-            <IconBtn Icon={PiPencil} onClick={onEdit} tip="Edit" />
-            <IconBtn Icon={PiCopy} onClick={() => navigator.clipboard.writeText('')} tip="Copy" />
-            <IconBtn Icon={PiTrash} onClick={onDelete} tip="Delete" className="text-red-500" />
+        <div className="flex flex-col items-center p-2 gap-2">
+            {Object.entries(GATE_DEFS).map(([type, def]) => (
+                <button
+                    key={type}
+                    onClick={() => handleGateClick(type)}
+                    className="w-12 h-12 rounded-lg bg-gray-700 hover:bg-gray-600 flex items-center justify-center text-white font-bold transition-colors"
+                    title={def.description || type}
+                >
+                    {type}
+                </button>
+            ))}
         </div>
     );
 }
 
-/* Tiny icon button */
+/* Small icon button */
 function IconBtn({ Icon, onClick, tip, className = "" }) {
     return (
         <button

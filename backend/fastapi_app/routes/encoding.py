@@ -1,14 +1,45 @@
-from fastapi import APIRouter, HTTPException, Body
-from FastAPI_app.models import CircuitData, ValidationResult
-from FastAPI_app.db import get_db
-from FastAPI_app.rabbitmq import rabbitmq
-from FastAPI_app.quantum_validator.quantum_validator import validate_quantum_circuit_from_dict
-from datetime import datetime
-import traceback
-from bson import ObjectId
-from bson.errors import InvalidId
+from dataclasses import dataclass, asdict
 
-router = APIRouter()
+from fastapi     import APIRouter, Response, status
+from pydantic    import BaseModel
+
+from ..circuit   import Circuit, validate_circuit, calculate_qubit_count
+from ..db        import get_db, get_next_id
+
+class CreateRequest(BaseModel):
+    name:    str
+    circuit: Circuit
+
+
+class CreateResponse(BaseModel):
+    valid:  bool
+    errors: list[str]
+    id:     int | None
+
+
+@dataclass
+class Encoding:
+    id:          int
+    name:        str
+    url:         str
+    description: str
+    circuit:     Circuit
+    qubit_count: int
+
+
+def encoding_from_create_request(request: CreateRequest) -> Encoding:
+    return Encoding(
+        id          = get_next_id("encodings"),
+        name        = request.name,
+        url         = '', # TODO: Take request data in the future.
+        description = '', # TODO: Take request data in the future.
+        circuit     = request.circuit,
+        qubit_count = calculate_qubit_count(request.circuit),
+    )
+
+def get_db_collection():
+    return get_db().encodings
+
 
 """Encoding API routes.
 
@@ -17,8 +48,6 @@ mounted under ``/api`` in the main application.
 
 Endpoints
 ---------
-``POST   /encode``
-    Send an encoding identifier to the worker via RabbitMQ.
 
 ``POST   /encoding``
     Validate a quantum circuit definition and store it if valid.
@@ -35,95 +64,89 @@ Endpoints
 ``DELETE /encoding/{object_id}``
     Delete an encoding entry.
 """
+router = APIRouter(prefix="/encoding", tags=["Resources"])
 
-@router.post("/encode")
-def send_encoding_to_worker(encoding_id: int):
-    try:
-        rabbitmq.send_message(str(encoding_id))
-        return True
-    except Exception:
-        traceback.print_exc()
-        return False
 
-@router.post("/encoding", response_model=ValidationResult)
-async def validate_circuit(circuit: CircuitData = Body(...)):
-    try:
-        result = validate_quantum_circuit_from_dict(circuit.dict(exclude_none=True))
-    except Exception:
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail="Validation error")
+@router.post("/")
+def create_new(request: CreateRequest, http_response: Response) -> CreateResponse:
+    id:     int | None = None
+    errors: list[str]  = []
 
-    if result["valid"]:
+    validation_errors = validate_circuit(request.circuit)
+
+    if validation_errors is not None:
+        errors += validation_errors
+
+
+    if validation_errors is None:
         try:
             db = get_db()
-            db.encodingHistory.insert_one({
-                "circuit": circuit.dict(exclude_none=True),
-                "valid": True,
-                "errors": [],
-                "timestamp": datetime.utcnow()
-            })
-        except Exception:
-            traceback.print_exc()
-            # TODO: Replace with more specific error message
-            raise HTTPException(status_code=500, detail="DB error")
+            encoding = encoding_from_create_request(request)
+            db.encodings.insert_one(asdict(encoding))
+
+            id = encoding.id
+            http_response.status_code = status.HTTP_200_OK
+        except Exception as e:
+            print("Exception in /api/encoding/:", e)  # 输出异常到日志
+            http_response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+            errors.append('Unable to persist in Database.')
+    else:
+        http_response.status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    return CreateResponse(
+        id     = id,
+        valid  = (len(errors) == 0),
+        errors = errors,
+    )
+    
+
+@router.get("/")
+def get_all(response: Response):
+    result = []
+
+    try:
+        docs = list(get_db_collection().find())
+
+        for doc in docs:
+            del doc["_id"]
+
+        response.status_code = status.HTTP_200_OK
+        result = docs
+    except:
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+
     return result
 
-@router.get("/encoding")
-def list_all_circuits():
-    db = get_db()
-    docs = list(db.encodingHistory.find())
-    for doc in docs:
-        doc["_id"] = str(doc["_id"])
-    return docs
+@router.get("/{encoding_id}")
+def get_by_id(encoding_id: int, response: Response):
+    result = None
 
-@router.get("/encoding/{object_id}")
-def get_circuit_by_id(object_id: str):
-    db = get_db()
     try:
-        obj_id = ObjectId(object_id)
-    except InvalidId:
-        raise HTTPException(status_code=400, detail="Invalid ID")
-    doc = db.encodingHistory.find_one({"_id": obj_id})
-    if not doc:
-        raise HTTPException(status_code=404, detail="Not found")
-    doc["_id"] = str(doc["_id"])
-    return doc
+        doc = get_db_collection().find_one({"id": encoding_id})
 
-@router.delete("/encoding/{object_id}")
-def delete_circuit_by_id(object_id: str):
-    db = get_db()
-    try:
-        obj_id = ObjectId(object_id)
-    except InvalidId:
-        raise HTTPException(status_code=400, detail="Invalid ID")
-    result = db.encodingHistory.delete_one({"_id": obj_id})
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Not found")
-    return {"message": f"Deleted {object_id}"}
+        if doc:
+            del doc["_id"]
 
-@router.put("/encoding/{object_id}")
-def update_circuit_by_id(object_id: str, circuit: CircuitData = Body(...)):
-    db = get_db()
+            response.status_code = status.HTTP_200_OK
+            result = doc
+        else:
+            response.status_code = status.HTTP_404_NOT_FOUND
+    except:
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+
+    return result
+
+
+@router.delete("/{encoding_id}")
+def delete_by_id(encoding_id: int, response: Response):
     try:
-        obj_id = ObjectId(object_id)
-    except InvalidId:
-        raise HTTPException(status_code=400, detail="Invalid ID")
-    try:
-        validation_result = validate_quantum_circuit_from_dict(circuit.dict(exclude_none=True))
-    except Exception:
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail="Validation error")
-    if not validation_result["valid"]:
-        return ValidationResult(valid=False, errors=validation_result["errors"])
-    result = db.encodingHistory.update_one(
-        {"_id": obj_id},
-        {"$set": {
-            "circuit": circuit.dict(exclude_none=True),
-            "valid": True,
-            "errors": [],
-            "timestamp": datetime.utcnow()
-        }}
-    )
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Not found")
-    return {"message": f"Updated {object_id}"}
+        delete_response = get_db_collection().delete_one({ "id": encoding_id })
+
+        if delete_response.deleted_count == 1:
+            response.status_code = status.HTTP_200_OK
+        else:
+            response.status_code = status.HTTP_404_NOT_FOUND
+
+    except:
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+

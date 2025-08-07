@@ -4,3 +4,4 @@ pymongo
 pika
 pydantic
 python-dotenv      
+testcontainers[mongodb]

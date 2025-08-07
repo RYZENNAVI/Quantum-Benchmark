@@ -1,0 +1,25 @@
+{
+  "results": [
+    {
+      "encoding_id": 2,
+      "ansatz_id": 1,
+      "data_id": 1,
+      "loss": 123,
+      "accuracy": 123
+    }
+  ],
+  "encodings": {
+    "2": {
+      "depth": 5,
+      "name": "Basis encoding",
+      "description": "Lorem ipsum"
+    }
+  },
+  "ansaetze": {
+    "2": {
+      "depth": 5,
+      "name": "Basis encoding",
+      "description": "Lorem ipsum"
+    }
+  }
+} 

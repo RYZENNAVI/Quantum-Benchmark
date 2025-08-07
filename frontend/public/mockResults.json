@@ -5,28 +5,28 @@
       "ansatz_id": 1,
       "data_id": 1,
       "loss": 5.6,
-      "accuracy": 92.3
+      "accuracy": 12.3
     },
     {
       "encoding_id": 1,
       "ansatz_id": 1,
       "data_id": 1,
       "loss": 5.6,
-      "accuracy": 92.3
+      "accuracy": 12.3
     },
     {
       "encoding_id": 2,
       "ansatz_id": 2,
       "data_id": 1,
       "loss": 8.1,
-      "accuracy": 88.9
+      "accuracy": 18.9
     },
     {
       "encoding_id": 1,
       "ansatz_id": 2,
       "data_id": 2,
       "loss": 6.4,
-      "accuracy": 90.1
+      "accuracy": 10.1
     }
   ],
   "encodings": {

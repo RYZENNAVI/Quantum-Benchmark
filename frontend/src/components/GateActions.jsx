@@ -10,7 +10,7 @@
 //     onAddCtrlBelow,
 //     onRemoveCtrl
 // }) {
-//     /* 多控制时，显示删控制按钮（选中时删最近的） */
+//     /* When multiple controls, show remove control button (remove nearest when selected) */
 //     const canRemoveCtrl = gate?.control?.length;
 
 //     return (
@@ -48,62 +48,47 @@
 //     );
 // }
 
-
-import { Edit, Trash, Plus, Minus } from 'lucide-react';
+import { PiPencil, PiTrash } from "react-icons/pi";
 
 /**
  * Floating toolbar
  * props:
- *   x, y                 — absolute positioning
- *   gate                 — currently selected Gate
- *   onEdit()             — edit drawer
- *   onDelete()           — delete gate
- *   onAddCtrlAbove()     — add control line above target
- *   onAddCtrlBelow()     — add control line below target
- *   onRemoveCtrl(row)    — remove control line
+ *   x, y                 —— Absolute positioning
+ *   gate                 —— Currently selected Gate
+ *   onEdit()             —— Edit drawer
+ *   onDelete()           —— Delete gate
+ *   onAddCtrlAbove()     —— Add control row above target
+ *   onAddCtrlBelow()     —— Add control row below target
+ *   onRemoveCtrl(row)    —— Remove control row
  */
-export default function GateActions({
-    x,
-    y,
-    gate,
-    onEdit = () => { },
-    onDelete = () => { },
-    onAddCtrlAbove = () => { },
-    onAddCtrlBelow = () => { },
-    onRemoveCtrl = () => { },
-}) {
-    const canRemoveCtrl = gate?.control?.length;
+export default function GateActions({ gate, onEdit, onDelete }) {
+    if (!gate) return null;
 
     return (
         <div
-            style={{ left: x, top: y }}
-            className="absolute z-50 flex flex-col gap-[2px] bg-zinc-800/80 backdrop-blur-sm border border-zinc-700/50 rounded p-1"
+            className="absolute z-50 flex flex-row gap-1 bg-gray-800 rounded-lg p-1.5 shadow-lg"
+            style={{
+                left: gate.timeStep * 100 + 64 + 48,  // Right side of gate
+                top: gate.target[0] * 100 + 100,  // Below the gate
+            }}
         >
-            <IconBtn Icon={Edit} tip="Bearbeiten" onClick={onEdit} />
-            <IconBtn Icon={Plus} tip="Ctrl nach oben" onClick={onAddCtrlAbove} />
-            <IconBtn Icon={Plus} tip="Ctrl nach unten" onClick={onAddCtrlBelow} />
-            {canRemoveCtrl && (
-                <IconBtn
-                    Icon={Minus}
-                    tip="Ctrl entfernen"
-                    onClick={() =>
-                        onRemoveCtrl(gate.control[gate.control.length - 1])
-                    }
-                />
-            )}
-            <IconBtn Icon={Trash} tip="Löschen" onClick={onDelete} className="text-red-400" />
-        </div>
-    );
-}
+            {/* Edit button */}
+            <button
+                onClick={onEdit}
+                className="text-white hover:bg-gray-700 rounded p-1"
+                title="Edit parameters"
+            >
+                <PiPencil size={16} />
+            </button>
 
-function IconBtn({ Icon, tip, className = "", ...rest }) {
-    return (
-        <button
-            {...rest}
-            title={tip}
-            className={`w-5 h-5 flex items-center justify-center hover:bg-zinc-700/80 rounded transition-colors ${className}`}
-        >
-            <Icon size={12} strokeWidth={2} className="text-white/90" />
-        </button>
+            {/* Delete button */}
+            <button
+                onClick={onDelete}
+                className="text-white hover:bg-gray-700 rounded p-1"
+                title="Delete gate"
+            >
+                <PiTrash size={16} />
+            </button>
+        </div>
     );
 }

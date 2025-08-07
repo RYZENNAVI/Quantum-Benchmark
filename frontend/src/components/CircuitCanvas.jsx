@@ -5,37 +5,95 @@ import { nanoid } from 'nanoid';
 
 import Gate from '@/components/Gate.jsx';
 import GateActions from '@/components/GateActions.jsx';
-import GateParameterDrawer from '@/components/GateEditor/GateParameterDrawer';
-
 import { ItemTypes } from '@/components/PaletteGate';
 import { useCircuit } from '@/contexts/CircuitContext';
 import { GATE_DEFS, PARAM_GATES } from '@/constants/gates';
 
-export const GRID = 100; // 增加网格大小，使q0、q1等量子比特之间的间距更大
-const MAX_COLS = 9; // t0~t8，共9列
+export const GRID = 100; // Increase grid size to make the spacing between q0, q1, etc. larger
+const MAX_COLS = 11; // t0~t8, total 9 columns
 
-export default function CircuitCanvas({ onSelectGate, initialCircuit, readOnly }) {
+export default function CircuitCanvas({ onSelectGate, onOpenDrawer, initialCircuit, readOnly, hasUploadedFile, fileName }) {
     const cvsRef = useRef(null);
     const { circuit, addGate, updateGate, removeGate, replaceCircuit } = useCircuit();
+    const [selectedGate, setSelectedGate] = useState(null);
 
     useEffect(() => {
         if (readOnly && initialCircuit) {
-            const gates = Array.isArray(initialCircuit)
-                ? initialCircuit
-                : initialCircuit.gates || [];
+            console.log('Initial circuit data:', initialCircuit); // Add log
+
+            // Handle different input formats
+            let circuitData;
+            if (Array.isArray(initialCircuit)) {
+                circuitData = { gates: initialCircuit };
+            } else if (initialCircuit.circuit) {
+                circuitData = { gates: initialCircuit.circuit };
+            } else {
+                circuitData = initialCircuit;
+            }
+
+            console.log('Processed circuit data:', circuitData); // Add log
+
+            const gates = circuitData.gates || [];
 
             let maxQubit = 0;
             gates.forEach(g => {
-                const wires = [...(g.target || []), ...(g.control || [])];
-                const maxWire = Math.max(-1, ...wires);
-                if (maxWire > maxQubit) maxQubit = maxWire;
+                // If it is a new format (using wires), convert to internal format
+                if (g.wires) {
+                    const wires = Array.isArray(g.wires) ? g.wires.map(Number) : [Number(g.wires)];
+                    maxQubit = Math.max(maxQubit, ...wires);
+                } else {
+                    const wires = [
+                        ...(g.target || []).map(Number),
+                        ...(g.control || []).map(Number)
+                    ];
+                    maxQubit = Math.max(maxQubit, ...wires);
+                }
             });
 
-            const numQubits = Array.isArray(initialCircuit)
-                ? Math.max(2, maxQubit + 1)
-                : initialCircuit.qubits ?? Math.max(2, maxQubit + 1);
+            // Convert the format of the gate
+            const convertedGates = gates.map((g, index) => {
+                let gate;
+                if (g.wires) {
+                    // Convert new format to internal format
+                    gate = {
+                        id: g.id || nanoid(6),
+                        type: g.gate.toUpperCase(),  // Ensure gate type is uppercase
+                        target: Array.isArray(g.wires) ? [g.wires[g.wires.length - 1]].map(Number) : [Number(g.wires)],
+                        control: Array.isArray(g.wires) ? g.wires.slice(0, -1).map(Number) : [],
+                        params: g.params || [],
+                        timeStep: index
+                    };
+                } else {
+                    // Old format, ensure all fields exist
+                    gate = {
+                        ...g,
+                        id: g.id || nanoid(6),
+                        type: (g.type || g.gate || '').toUpperCase(),  // Ensure gate type is uppercase
+                        target: (g.target || []).map(Number),
+                        control: (g.control || []).map(Number),
+                        params: g.params || [],
+                        timeStep: index
+                    };
+                }
 
-            replaceCircuit({ qubits: numQubits, gates });
+                // Ensure type field exists and is correct
+                if (!gate.type && gate.gate) {
+                    gate.type = gate.gate.toUpperCase();
+                }
+
+                console.log('Converted gate:', gate); // Add log
+                return gate;
+            });
+
+            // Keep the original number of qubits unless the imported circuit requires more
+            const numQubits = Math.max(
+                circuit.qubits || 4,  // Default 4 qubits
+                circuitData.qubits || 0,  // Number specified by imported circuit
+                maxQubit + 1  // Calculate according to the maximum index used by the gate
+            );
+
+            console.log('Converted circuit:', { qubits: numQubits, gates: convertedGates }); // Add log
+            replaceCircuit({ qubits: numQubits, gates: convertedGates });
         }
     }, [initialCircuit, readOnly, replaceCircuit]);
 
@@ -64,19 +122,24 @@ export default function CircuitCanvas({ onSelectGate, initialCircuit, readOnly }
     const pointToCoord = ({ x, y }) => {
         const rect = cvsRef.current.getBoundingClientRect();
         const { scrollLeft, scrollTop } = cvsRef.current;
-        // 横坐标需减去ID栏宽度64px，确保col与时间步严格对齐
+        // The x coordinate needs to subtract the ID column width 64px to ensure col strictly aligns with the time step
         const col = Math.floor((x + scrollLeft - rect.left - 64) / GRID);
         const row = Math.floor((y + scrollTop - rect.top) / GRID);
         return { col, row };
     };
 
-    /* ---------- 拖放时自动给受控门加 control ---------- */
+    /* ---------- Add gate ---------- */
     const addGateAt = (type, { row, col }) => {
         if (row < 0 || row >= circuit.qubits || col < 0 || col >= MAX_COLS) return;
 
         const params = GATE_DEFS[type].params?.map(p => p.default ?? 0);
         const needsCtl = ['CNOT', 'CZ', 'SWAP'].includes(type);
-        const control = needsCtl ? [row === 0 ? 1 : row - 1] : undefined;
+
+        // For gates that require control points, a control point is added above the target by default
+        let control;
+        if (needsCtl) {
+            control = [row > 0 ? row - 1 : row + 1];
+        }
 
         addGate({
             id: nanoid(6),
@@ -88,87 +151,32 @@ export default function CircuitCanvas({ onSelectGate, initialCircuit, readOnly }
         });
     };
 
-    /* ---------- Gate 工具条 & 抽屉 ---------- */
-    const [toolbar, setToolbar] = useState({ gate: null, x: 0, y: 0 });
-    const [drawer, setDrawer] = useState({ open: false, gate: null });
-
-    const openDrawer = g =>
-        PARAM_GATES.includes(g.type) && setDrawer({ open: true, gate: g });
-
-    const selectGate = (gate, position) => {
-        if (!gate) {
-            setToolbar({ gate: null, x: 0, y: 0 });
-            return;
-        }
-
-        // 使用传入的位置信息
-        setToolbar({
-            gate,
-            x: position.x,
-            y: position.y
-        });
-
-        // 通知父组件
+    const handleGateSelect = (gate) => {
+        setSelectedGate(gate);
         onSelectGate?.(gate);
     };
 
-    // 处理点击空白区域
     const handleCanvasClick = (e) => {
-        // 如果点击的是画布本身（而不是其中的门），则清除工具栏
         if (e.target === e.currentTarget) {
-            setToolbar({ gate: null });
-            // 清除选中的门
-            if (onSelectGate) {
-                onSelectGate(null);
-            }
+            setSelectedGate(null);
+            onSelectGate?.(null);
         }
     };
 
-    /* ---------- 增 / 删控制行 ---------- */
-    const addControlRow = (gate, dir) => {
-        const tgt = gate.target[0];
-        const newRow = dir === 'above' ? tgt - 1 : tgt + 1;
-        if (newRow < 0 || newRow >= circuit.qubits) return;        // 越界
-        if (newRow === tgt) return;
-        if (gate.control?.includes(newRow)) return;                // 已存在
-
-        const updated = {
-            ...gate,
-            control: [...(gate.control ?? []), newRow].sort((a, b) => a - b),
-        };
-        updateGate(gate.id, { control: updated.control });
-        setToolbar(t => ({ ...t, gate: updated }));
-
-        // 更新选中的门
-        if (onSelectGate) {
-            onSelectGate(updated);
-        }
+    // Handle control point update
+    const handleUpdateControl = (gateId, newControl) => {
+        updateGate(gateId, { control: newControl });
     };
 
-    const removeLastControl = gate => {
-        if (!gate.control?.length) return;
-        const control = [...gate.control];
-        control.pop();                    // 移除最后一个
-        updateGate(gate.id, { control });
-
-        const updated = { ...gate, control };
-        setToolbar(t => ({ ...t, gate: updated }));
-
-        // 更新选中的门
-        if (onSelectGate) {
-            onSelectGate(updated);
-        }
-    };
-
-    // 生成时间步标记
+    // Generate time step markers
     const timeSteps = Array.from({ length: MAX_COLS }, (_, i) => i);
 
     /* ---------- render ---------- */
     return (
         <div className="flex flex-col h-full min-h-[250px] overflow-hidden">
-            {/* 外层灰色圆角实线框，包含ID行和电路图区域 */}
+            {/* Outer gray rounded solid line box, contains ID row and circuit diagram area */}
             <div className="border-2 border-gray-400 rounded-lg m-2 overflow-hidden flex flex-col flex-grow">
-                {/* 顶部时间步标记 */}
+                {/* Top time step markers */}
                 <div className="relative py-3 px-10 bg-gray-50 border-b border-gray-300" style={{ height: 70 }}>
                     <div className="absolute left-0 w-20 text-center text-gray-600 text-sm font-medium" style={{ top: 0, bottom: 0, lineHeight: '40px' }}>
                         ID
@@ -190,17 +198,17 @@ export default function CircuitCanvas({ onSelectGate, initialCircuit, readOnly }
                     ))}
                 </div>
 
-                {/* 主电路区域 */}
+                {/* Main circuit area */}
                 <div
                     ref={setRefs}
                     className="relative flex-1 overflow-auto bg-white p-6"
                     onClick={handleCanvasClick}
                     style={{
-                        height: Math.max(circuit.qubits * GRID + 60, 180), // 确保最小高度
+                        height: Math.max(circuit.qubits * GRID + 60, 180),
                         minHeight: "180px"
                     }}
                 >
-                    {/* 量子比特标签和轨道 */}
+                    {/* Qubit labels and tracks */}
                     {Array.from({ length: circuit.qubits }).map((_, r) => (
                         <div
                             key={r}
@@ -214,7 +222,7 @@ export default function CircuitCanvas({ onSelectGate, initialCircuit, readOnly }
                         </div>
                     ))}
 
-                    {/* 时间步辅助竖线 */}
+                    {/* Time step auxiliary vertical lines */}
                     {timeSteps.map(col => (
                         <div
                             key={col}
@@ -223,12 +231,12 @@ export default function CircuitCanvas({ onSelectGate, initialCircuit, readOnly }
                         />
                     ))}
 
-                    {/* Hover 提示 */}
+                    {/* Hover tooltip */}
                     {hover && hover.row >= 0 && hover.row < circuit.qubits && (
                         <div
                             className="pointer-events-none absolute rounded border-2 border-blue-500/50 bg-blue-300/20"
                             style={{
-                                left: hover.col * GRID + 64, // 与ID栏宽度一致
+                                left: hover.col * GRID + 64,
                                 top: hover.row * GRID,
                                 width: GRID,
                                 height: GRID,
@@ -237,58 +245,40 @@ export default function CircuitCanvas({ onSelectGate, initialCircuit, readOnly }
                     )}
 
                     {/* Gates */}
-                    {circuit.gates.map(g => {
-                        console.log('渲染门', g);
-                        return (
-                            <Gate
-                                key={g.id}
-                                gate={g}
-                                onSelect={selectGate}
-                            />
-                        );
-                    })}
+                    {circuit.gates.map(g => (
+                        <Gate
+                            key={g.id}
+                            gate={g}
+                            onSelect={handleGateSelect}
+                            onUpdateControl={handleUpdateControl}
+                        />
+                    ))}
 
-                    {/* 工具条 */}
-                    {toolbar.gate && (
+                    {/* Toolbar */}
+                    {selectedGate && (
                         <GateActions
-                            x={toolbar.x}
-                            y={toolbar.y}
-                            gate={toolbar.gate}
-                            onEdit={() => openDrawer(toolbar.gate)}
-                            onDelete={() => {
-                                removeGate(toolbar.gate.id);
-                                setToolbar({ gate: null });
-                                // 清除选中的门
-                                if (onSelectGate) {
-                                    onSelectGate(null);
-                                }
+                            gate={selectedGate}
+                            onEdit={() => {
+                                onOpenDrawer?.();
                             }}
-                            onAddCtrlAbove={() => addControlRow(toolbar.gate, 'above')}
-                            onAddCtrlBelow={() => addControlRow(toolbar.gate, 'below')}
-                            onRemoveCtrl={() => removeLastControl(toolbar.gate)}
+                            onDelete={() => {
+                                removeGate(selectedGate.id);
+                                setSelectedGate(null);
+                                onSelectGate?.(null);
+                            }}
                         />
                     )}
-
-                    {/* 参数抽屉 */}
-                    <GateParameterDrawer
-                        gate={drawer.gate}
-                        open={drawer.open}
-                        onClose={() => setDrawer({ ...drawer, open: false })}
-                        onSave={u => {
-                            updateGate(drawer.gate.id, u);
-                            // 更新选中的门的参数
-                            if (onSelectGate && drawer.gate) {
-                                const updatedGate = { ...drawer.gate, ...u };
-                                onSelectGate(updatedGate);
-                            }
-                        }}
-                    />
                 </div>
             </div>
 
-            {/* 底部提示文本 */}
+            {/* Bottom tip text */}
             <div className="text-center text-sm text-gray-500 p-3 border-t">
-                Ziehen Sie Gates aus der Palette und legen Sie sie auf dem Raster ab
+                {hasUploadedFile && (
+                    <div className="mb-2 text-blue-600">
+                        The code was uploaded and is available for benchmarking under the name <span className="text-black font-bold">{fileName || 'Circuit'}</span>
+                    </div>
+                )}
+                <div>Drag the quantum gate onto the grid to place it. Drag the control point to change its position.</div>
             </div>
         </div>
     );

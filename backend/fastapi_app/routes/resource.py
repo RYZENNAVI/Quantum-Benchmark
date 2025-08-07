@@ -1,9 +1,54 @@
 from fastapi import APIRouter, HTTPException
 from typing import Dict
-from FastAPI_app.models import ResourceFetchRequest, ResourceFetchResponse
-from FastAPI_app.db import get_db
+from fastapi_app.models import ResourceFetchRequest, ResourceFetchResponse
+from fastapi_app.db import get_db
 
 router = APIRouter()
+
+@router.get("/resources", response_model=ResourceFetchResponse)
+def get_all_resources():
+    """
+    Fetch all resources (encodings, ansaetze, datasets) in a single call.
+
+    Returns:
+        ResourceFetchResponse or None: The ResourceFetchResponse object with all data in DB.
+    """
+    try:
+        db = get_db()
+        encoding_docs = list(db.encodings.find())
+        ansatz_docs= list(db.ansaetze.find())
+        dataset_docs = list(db.datasets.find())
+    except Exception as exc:
+        # Database connection issues, propagate as 500
+        raise HTTPException(status_code=500, detail="DB error") from exc
+    return convert_to_resourcefetchresponse(encoding_docs, ansatz_docs, dataset_docs)
+
+@router.get("/resources/{collection}")
+def get_collection_resources(collection: str):
+    """
+    Fetch all resources (encodings, ansaetze, datasets) of one collection.
+
+    Returns:
+        ResourceFetchResponse or None: The ResourceFetchResponse object with all data in one collection in DB.
+    """
+    try:
+        db = get_db()
+        match collection:
+            case "encodings":
+                encoding_docs = list(db.encodings.find())
+                response = convert_to_resourcefetchresponse(encoding_docs, None, None)
+            case "ansaetze":
+                ansatz_docs = list(db.ansaetze.find())
+                response = convert_to_resourcefetchresponse(None, ansatz_docs, None)
+            case "datasets":
+                dataset_docs = list(db.datasets.find())
+                response = convert_to_resourcefetchresponse(None, None, dataset_docs)
+            case _:
+                response = convert_to_resourcefetchresponse(None, None, None)
+    except Exception as exc:
+        # Database connection issues, propagate as 500
+        raise HTTPException(status_code=500, detail="DB error") from exc
+    return response
 
 @router.post("/resources", response_model=ResourceFetchResponse)
 async def fetch_resources(request: ResourceFetchRequest) -> ResourceFetchResponse:
@@ -17,11 +62,11 @@ async def fetch_resources(request: ResourceFetchRequest) -> ResourceFetchRespons
 
     Parameters
     ----------
-    encoding_ids : list[str] | None
+    encoding_ids : list[int] | None
         IDs of the encodings to fetch.
-    ansatz_ids : list[str] | None
+    ansatz_ids : list[int] | None
         IDs of the ansätze (approaches) to fetch.
-    dataset_ids : list[str] | None
+    dataset_ids : list[int] | None
         IDs of the datasets to fetch.
     full : bool, default ``False``
         If ``True`` all information associated with the resource is returned.
@@ -30,50 +75,56 @@ async def fetch_resources(request: ResourceFetchRequest) -> ResourceFetchRespons
     """
     try:
         db = get_db()
-        docs = list(db.referenceData.find())
+        if request.encoding_ids:
+            encoding_docs = list(db.encodings.find({"id": {"$in": request.encoding_ids}}))
+        else:
+            encoding_docs = []
+        if request.ansatz_ids:
+            ansatz_docs = list(db.ansaetze.find({"id": {"$in": request.ansatz_ids}}))
+        else:
+            ansatz_docs = []
+        if request.dataset_ids:
+            dataset_docs = list(db.datasets.find({"id": {"$in": request.dataset_ids}}))
+        else:
+            dataset_docs = []
     except Exception as exc:
         # Database connection issues, propagate as 500
         raise HTTPException(status_code=500, detail="DB error") from exc
 
     # Combine all reference data docs into one lookup table per resource type
-    encodings: Dict[str, Dict] = {}
-    ansaetze: Dict[str, Dict] = {}
-    datasets: Dict[str, Dict] = {}
-
-    for doc in docs:
-        data = doc.get("data", {})
-        encodings.update(data.get("encodings", {}))
-        ansaetze.update(data.get("ansaetze", {}))
-        datasets.update(data.get("data", {}))  # nested "data" contains datasets
 
     def _summarise(item: Dict) -> Dict:
         """Return a short description of the resource."""
         return {
             "name": item.get("name"),
             "description": item.get("description"),
-            "depth": item.get("depth")
+            "depth": item.get("depth", None)
         }
 
-    result_encodings: Dict[str, Dict] = {}
-    result_ansaetze: Dict[str, Dict] = {}
-    result_datasets: Dict[str, Dict] = {}
+    if request.full:
+        return convert_to_resourcefetchresponse(encoding_docs, ansatz_docs, dataset_docs)
+    else:
+        encodings = {encoding["id"]: _summarise(encoding) for encoding in encoding_docs}
+        ansaetze = {ansatz["id"]: _summarise(ansatz) for ansatz in ansatz_docs}
+        datasets = {dataset["id"]: _summarise(dataset) for dataset in dataset_docs}
+        return ResourceFetchResponse(
+            encodings=encodings,
+            ansaetze=ansaetze,
+            datasets=datasets
+        )
 
-    # Helper to populate results based on requested ids and detail flag
-    def populate(ids, source, target):
-        if not ids:
-            return  # Nothing requested
-        for _id in ids:
-            item = source.get(str(_id))
-            if item is None:
-                continue  # silently ignore missing
-            target[_id] = item if request.full else _summarise(item)
-
-    populate(request.encoding_ids, encodings, result_encodings)
-    populate(request.ansatz_ids, ansaetze, result_ansaetze)
-    populate(request.dataset_ids, datasets, result_datasets)
-
+def convert_to_resourcefetchresponse(encoding_docs, ansatz_docs, dataset_docs):
+    for doc in encoding_docs or []:
+        doc.pop("_id", None)
+    for doc in ansatz_docs or []:
+        doc.pop("_id", None)
+    for doc in dataset_docs or []:
+        doc.pop("_id", None)
+    encodings = {encoding["id"]: encoding for encoding in (encoding_docs or [])}
+    ansaetze = {ansatz["id"]: ansatz for ansatz in (ansatz_docs or [])}
+    datasets = {dataset["id"]: dataset for dataset in (dataset_docs or [])}
     return ResourceFetchResponse(
-        encodings=result_encodings,
-        ansaetze=result_ansaetze,
-        datasets=result_datasets,
-    ) 
+        encodings=encodings,
+        ansaetze=ansaetze,
+        datasets=datasets
+    )
