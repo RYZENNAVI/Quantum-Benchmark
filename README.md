@@ -10,6 +10,23 @@ Given their importance, systematically benchmarking quantum encodings is essenti
 
 This software project focuses on addressing that challenge by developing a dedicated benchmarking application for quantum encodings in VQAs. The goal is to provide a web application, which allows users to upload, evaluate, and compare different encodings across a variety of datasets and algorithmic setups, laying the groundwork for more efficient and interpretable QML systems. 
 
+## Technology Stack
+### Frontend
+Framework: React19 + Vite
+Styling: Tailwind CSS & Radix UI
+Routing: React Router DOM
+State Management: Zustand
+Drag & Drop: React DnD
+Visualisierung: Recharts, Figma
+
+### Backend 
+FastAPI
+Pennylane, Jax
+RabbitMQ, MongoDB(pika, pymongo)
+Docker(-Compose)
+Testcontainers
+pytest
+
 ## Installation
 ### Requirments
 Docker required
